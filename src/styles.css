@@ -187,3 +187,34 @@ select{background:#07131d;border:1px solid #284052;color:#fff;border-radius:10px
   .join-code{font-size:24px}
   .league-switcher{margin:-4px 0 12px}
 }
+
+
+/* v0.7 sport coverage, keeper economics, configurable snake order */
+.coverage-summary{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+.sport-coverage-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.sport-coverage{border:1px solid #243d4e;border-radius:12px;padding:12px;background:#081620;display:grid;gap:4px}
+.sport-coverage span{font-size:11px;color:#8298aa}
+.sport-coverage b{font-size:22px}
+.sport-coverage.covered{border-color:color-mix(in srgb,var(--primary) 48%,#243d4e)}
+.sport-coverage.covered small{color:var(--primary)}
+.sport-coverage.missing{border-style:dashed;opacity:.72}
+
+.draft-order-list{display:grid;gap:7px}
+.draft-order-row{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;border:1px solid #1d3344;border-radius:11px;padding:10px 11px;background:#081520}
+.draft-order-row>strong{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:color-mix(in srgb,var(--primary) 16%,#122330);color:var(--primary)}
+.draft-order-row>div:nth-child(2){display:flex;flex-direction:column;gap:2px}
+.draft-order-actions{display:flex;gap:5px}
+.draft-order-actions button{width:32px;height:32px;border:1px solid #294254;border-radius:8px;background:#122330;color:#d4e2eb;cursor:pointer}
+.draft-order-actions button:disabled{opacity:.35;cursor:not-allowed}
+
+.app.theme-light .sport-coverage,
+.app.theme-light .draft-order-row{background:#f6fafb;color:#13202a;border-color:#d3dfe5}
+.app.theme-light .draft-order-actions button{background:#eef4f7;color:#13202a;border-color:#cbd9e1}
+
+@media(max-width:900px){
+  .sport-coverage-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:620px){
+  .coverage-summary{align-items:flex-start;flex-direction:column}
+  .sport-coverage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
