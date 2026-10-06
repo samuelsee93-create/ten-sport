@@ -7,7 +7,7 @@ export const SPORTS = [
   'MLB',
   'UCL',
   'NCAA',
-  '6 Nations',
+  'Super League Rugby',
   'Tennis',
 ];
 
