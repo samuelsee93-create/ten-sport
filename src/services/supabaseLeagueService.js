@@ -103,7 +103,13 @@ export class SupabaseLeagueService {
       data: { user },
       error: userError,
     } = await c.auth.getUser();
-    if (userError) throw userError;
+    if (userError) {
+      const noSession =
+        userError.name === 'AuthSessionMissingError'
+        || /auth session missing/i.test(userError.message ?? '');
+      if (noSession) throw new Error('Authentication required.');
+      throw userError;
+    }
     if (!user) throw new Error('Authentication required.');
 
     const membershipRows = unwrap(
