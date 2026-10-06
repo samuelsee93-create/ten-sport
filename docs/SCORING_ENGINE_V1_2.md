@@ -53,6 +53,11 @@ Four majors, maximum **250 per major / 1,000 total**:
 - Missed cut: 0
 - Did not qualify/play: 0
 
+Cut classification for historical imports:
+- If the player records a Round 3 or Round 4 score (more than two rounds played), treat them as having **made the cut**.
+- If the player only records Rounds 1–2, treat them as **missed cut**.
+- An explicit WD/DQ may override the round-count rule only when the source clearly shows the player had already advanced through the cut before withdrawing/disqualification.
+
 ## Tennis
 
 Four Grand Slams, maximum **250 per Slam / 1,000 total**:
@@ -126,7 +131,7 @@ Tournament wins:
 
 National Champion bonus: **+300**
 
-## Super League Rugby
+## Super Rugby Pacific
 
 Maximum: **1,000**
 
@@ -134,33 +139,37 @@ Maximum: **1,000**
 - Regular-season placement: **150**
 - Playoff wins: **200**
 - Playoff advancement: **150**
-- Grand Final championship: **250**
+- Championship: **250**
 
-Regular-season wins:
-- Elite benchmark: **22 wins**
-- Formula: `250 × wins / 22`, capped at 250.
+For the 2026 historical season:
+- 14 regular-season matches per club.
+- Elite win benchmark: **12 wins**.
+- Formula: `250 × wins / 12`, capped at 250.
 
 Regular-season placement:
-- Only the top half of the 14-team league scores.
-- 1st = 150.
-- 7th = 10.
-- Positions 1–7 use the same linear top-half placement formula as the other team sports.
-- 8th–14th = 0.
+- Top six score placement points because the top six qualify for the finals.
+- 1st: 150
+- 2nd: 122
+- 3rd: 94
+- 4th: 66
+- 5th: 38
+- 6th: 10
+- 7th and lower: 0
 
 Playoff wins:
 - **100 points per playoff win**, capped at 200.
-- This avoids rewarding lower seeds simply for having an extra Eliminator match.
+- This prevents a lower seed from receiving extra value solely because it has an additional knockout match available.
 
 Playoff advancement:
-- Qualify for the top-six playoffs: **+25**
-- Reach the semifinals: **+35** (the 1st/2nd-place bye counts)
+- Qualify for the top-six finals: **+25**
+- Reach the semifinals: **+35**
 - Reach the Grand Final: **+40**
 - Win the Grand Final: **+50**
 - Maximum advancement: **150**
 
 The championship bonus is a separate **+250**.
 
-A dominant 1st-place champion can reach the full 1,000, while a lower-seeded champion can still score heavily without receiving an artificial bonus for playing an extra playoff game.
+The advancement model accommodates the competition's finals structure, including semifinal byes or other officially defined advancement paths without double-counting playoff wins.
 
 ## Historical import rule
 
