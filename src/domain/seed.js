@@ -21,7 +21,7 @@ rosterMemberships.push({id:'rm-akash-leclerc',teamId:'team-akash',assetId:'asset
 const draftPicks=[];
 for(let round=1;round<=17;round+=1){teams.forEach((team,slot)=>{const tradedToAkash=round===3&&team.id==='team-sam';draftPicks.push({id:`pick-2027-${round}-${slot+1}`,season:2027,round,slot:slot+1,originalTeamId:team.id,currentTeamId:tradedToAkash?'team-akash':team.id});});}
 export function createSeedState(){return{
-  version:3,currentUserId:'user-sam',
+  version:3,currentUserId:'user-sam',currentTeamId:'team-sam',currentRole:'COMMISSIONER',currentUser:{id:'user-sam',displayName:'Sam',avatarUrl:null},
   league:{id:'league-ten-sport',name:'Ten Sport Fantasy League',season:'2026-27',scoringVersion:'v1.2',keeperDeadline:'2027-08-15T23:59:00-04:00',rosterSize:20,activeSlots:15,benchSlots:5,keeperSlots:3},
   teams,assets,rosterMemberships,
   keeperSelections:[{teamId:'team-sam',assetId:'asset-2'},{teamId:'team-sam',assetId:'asset-4'}],
