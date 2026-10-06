@@ -7,8 +7,11 @@ import {
   Database,
   DraftingCompass,
   Gauge,
+  List,
   LogOut,
+  Palette,
   RotateCcw,
+  Search,
   ShieldCheck,
   Trophy,
   Users,
@@ -31,6 +34,7 @@ import {
 const NAV = [
   ['Dashboard', Gauge],
   ['My Team', Users],
+  ['Assets', List],
   ['Trades', ArrowRightLeft],
   ['Keepers', Crown],
   ['Draft', DraftingCompass],
@@ -339,6 +343,122 @@ function MyTeam({ state, teamId, setError }) {
   );
 }
 
+
+function Assets({ state }) {
+  const [query, setQuery] = useState('');
+  const [sport, setSport] = useState('ALL');
+  const [availability, setAvailability] = useState('ALL');
+  const [sort, setSort] = useState('POINTS');
+
+  const sports = [...new Set(state.assets.map((asset) => asset.sport))].sort();
+  const ownershipByAsset = Object.fromEntries(
+    state.rosterMemberships.map((membership) => [membership.assetId, membership.teamId])
+  );
+
+  const rows = state.assets
+    .map((asset) => {
+      const previous = (asset.history ?? []).find((item) => item.seasonLabel !== state.league.season) ?? null;
+      const ownerTeamId = ownershipByAsset[asset.id] ?? null;
+      const owner = ownerTeamId ? teamById(state, ownerTeamId) : null;
+      return { asset, previous, owner };
+    })
+    .filter(({ asset, owner }) => {
+      const matchesQuery = !query.trim()
+        || asset.name.toLowerCase().includes(query.trim().toLowerCase());
+      const matchesSport = sport === 'ALL' || asset.sport === sport;
+      const matchesAvailability = availability === 'ALL'
+        || (availability === 'AVAILABLE' && !owner)
+        || (availability === 'ROSTERED' && !!owner);
+      return matchesQuery && matchesSport && matchesAvailability;
+    })
+    .sort((a, b) => {
+      if (sort === 'NAME') return a.asset.name.localeCompare(b.asset.name);
+      if (sort === 'SPORT') return a.asset.sport.localeCompare(b.asset.sport) || a.asset.name.localeCompare(b.asset.name);
+      if (sort === 'RANK') return (a.previous?.rank ?? Number.MAX_SAFE_INTEGER) - (b.previous?.rank ?? Number.MAX_SAFE_INTEGER);
+      return (b.previous?.points ?? -1) - (a.previous?.points ?? -1) || a.asset.name.localeCompare(b.asset.name);
+    });
+
+  return (
+    <Card
+      title="Draftable Assets"
+      icon={List}
+      action={<Badge>{state.assets.length} assets</Badge>}
+    >
+      <p className="muted">
+        The master draft pool. Historical points show what each asset would have scored under the Ten Sport scoring model.
+      </p>
+      <div className="asset-toolbar">
+        <label className="search-box">
+          <Search size={16} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search assets…"
+          />
+        </label>
+        <select value={sport} onChange={(event) => setSport(event.target.value)}>
+          <option value="ALL">All sports</option>
+          {sports.map((item) => <option key={item} value={item}>{item}</option>)}
+        </select>
+        <select value={availability} onChange={(event) => setAvailability(event.target.value)}>
+          <option value="ALL">All assets</option>
+          <option value="AVAILABLE">Available only</option>
+          <option value="ROSTERED">Rostered only</option>
+        </select>
+        <select value={sort} onChange={(event) => setSort(event.target.value)}>
+          <option value="POINTS">Sort: previous points</option>
+          <option value="RANK">Sort: previous rank</option>
+          <option value="NAME">Sort: name</option>
+          <option value="SPORT">Sort: sport</option>
+        </select>
+      </div>
+
+      {state.assets.length === 0 ? (
+        <div className="empty-state">
+          <b>The asset database is ready.</b>
+          <span>No real-world assets have been imported yet. That is the next data-ingestion step.</span>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="empty-state">
+          <b>No assets match those filters.</b>
+          <span>Try clearing the search or changing a filter.</span>
+        </div>
+      ) : (
+        <div className="asset-table-wrap">
+          <table className="asset-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Sport</th>
+                <th>Previous season</th>
+                <th>Points</th>
+                <th>Rank</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ asset, previous, owner }) => (
+                <tr key={asset.id}>
+                  <td><b>{asset.name}</b></td>
+                  <td><Badge>{asset.sport}</Badge></td>
+                  <td>{previous?.seasonLabel ?? '—'}</td>
+                  <td className="numeric">{previous ? previous.points.toLocaleString() : '—'}</td>
+                  <td className="numeric">{previous?.rank ? `#${previous.rank}` : '—'}</td>
+                  <td>
+                    {owner
+                      ? <Badge>{owner.name}</Badge>
+                      : <Badge tone="good">Available</Badge>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function Trades({ state, teamId, setError }) {
   const relevant = state.trades.filter((trade) => trade.toTeamId === teamId || trade.fromTeamId === teamId);
   return (
@@ -468,8 +588,108 @@ function Draft({ state, teamId, setError }) {
 }
 
 function Commissioner({ state, teamId, setError }) {
+  const [appearance, setAppearance] = useState({
+    name: state.league.name ?? 'Ten Sport Fantasy League',
+    logoUrl: state.league.logoUrl ?? '',
+    primaryColor: state.league.primaryColor ?? '#6ee7b7',
+    accentColor: state.league.accentColor ?? '#22d3ee',
+    themeMode: state.league.themeMode ?? 'dark',
+  });
+
+  useEffect(() => {
+    setAppearance({
+      name: state.league.name ?? 'Ten Sport Fantasy League',
+      logoUrl: state.league.logoUrl ?? '',
+      primaryColor: state.league.primaryColor ?? '#6ee7b7',
+      accentColor: state.league.accentColor ?? '#22d3ee',
+      themeMode: state.league.themeMode ?? 'dark',
+    });
+  }, [
+    state.league.name,
+    state.league.logoUrl,
+    state.league.primaryColor,
+    state.league.accentColor,
+    state.league.themeMode,
+  ]);
+
+  const setAppearanceField = (field, value) => {
+    setAppearance((current) => ({ ...current, [field]: value }));
+  };
+
   return (
     <div className="grid two">
+      {hostedBackendEnabled && (
+        <Card title="League Appearance" icon={Palette}>
+          <div className="appearance-preview">
+            <div
+              className="appearance-logo"
+              style={{ background: `linear-gradient(145deg, ${appearance.primaryColor}, ${appearance.accentColor})` }}
+            >
+              {appearance.logoUrl ? <img src={appearance.logoUrl} alt="" /> : '10'}
+            </div>
+            <div>
+              <b>{appearance.name || 'Ten Sport Fantasy League'}</b>
+              <small>{appearance.themeMode} theme</small>
+            </div>
+          </div>
+          <div className="appearance-fields">
+            <label>
+              <span>League name</span>
+              <input
+                value={appearance.name}
+                maxLength={80}
+                onChange={(event) => setAppearanceField('name', event.target.value)}
+              />
+            </label>
+            <label>
+              <span>League logo HTTPS URL</span>
+              <input
+                value={appearance.logoUrl}
+                onChange={(event) => setAppearanceField('logoUrl', event.target.value)}
+                placeholder="https://…"
+              />
+            </label>
+            <div className="color-fields">
+              <label>
+                <span>Primary colour</span>
+                <div className="color-input">
+                  <input
+                    type="color"
+                    value={appearance.primaryColor}
+                    onChange={(event) => setAppearanceField('primaryColor', event.target.value)}
+                  />
+                  <code>{appearance.primaryColor}</code>
+                </div>
+              </label>
+              <label>
+                <span>Accent colour</span>
+                <div className="color-input">
+                  <input
+                    type="color"
+                    value={appearance.accentColor}
+                    onChange={(event) => setAppearanceField('accentColor', event.target.value)}
+                  />
+                  <code>{appearance.accentColor}</code>
+                </div>
+              </label>
+            </div>
+            <label>
+              <span>Theme</span>
+              <select
+                value={appearance.themeMode}
+                onChange={(event) => setAppearanceField('themeMode', event.target.value)}
+              >
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+                <option value="system">Follow device</option>
+              </select>
+            </label>
+            <Button onClick={() => run(() => leagueService.updateLeagueAppearance(appearance), setError)}>
+              Save League Appearance
+            </Button>
+          </div>
+        </Card>
+      )}
       <Card title="Draft Controls" icon={ShieldCheck}>
         {state.draft ? (
           <div className="stack tight">
@@ -557,6 +777,7 @@ export default function App() {
   const content = {
     Dashboard: <Dashboard state={state} teamId={teamId} />,
     'My Team': <MyTeam state={state} teamId={teamId} setError={setError} />,
+    Assets: <Assets state={state} />,
     Trades: <Trades state={state} teamId={teamId} setError={setError} />,
     Keepers: <Keepers state={state} teamId={teamId} setError={setError} />,
     Draft: <Draft state={state} teamId={teamId} setError={setError} />,
@@ -564,11 +785,17 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div
+      className={`app theme-${state.league.themeMode ?? 'dark'}`}
+      style={{
+        '--primary': state.league.primaryColor ?? '#6ee7b7',
+        '--accent': state.league.accentColor ?? '#22d3ee',
+      }}
+    >
       <aside>
         <div className="brand">
-          <div>10</div>
-          <span><b>TEN SPORT</b><small>Fantasy League</small></span>
+          <div>{state.league.logoUrl ? <img src={state.league.logoUrl} alt="" /> : '10'}</div>
+          <span><b>{state.league.name ?? 'TEN SPORT'}</b><small>Ten Sport Fantasy</small></span>
         </div>
         <nav>
           {nav.map(([label, Icon]) => (
