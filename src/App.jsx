@@ -231,7 +231,7 @@ function LeagueForms({ onComplete, currentSeason = '2026-27' }) {
           name: leagueName,
           teamName,
           seasonLabel: currentSeason,
-          scoringVersion: 'v1.0',
+          scoringVersion: 'v1.2',
         });
       }
       onComplete?.();
