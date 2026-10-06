@@ -12,13 +12,16 @@
     ],
     "us_open": [
       "U.S. Open"
+    ],
+    "open": [
+      "The Open Championship"
     ]
   },
   "golfers": [
     {
       "owgr_rank": 1,
       "player": "Scottie Scheffler",
-      "points": 415,
+      "points": 565,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
@@ -61,19 +64,84 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T4",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 150
         }
       },
       "sport_rank": 1
     },
     {
+      "owgr_rank": 9,
+      "player": "Sam Burns",
+      "points": 535,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "8",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "31",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "2",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 200
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "3",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 175
+        }
+      },
+      "sport_rank": 2
+    },
+    {
       "owgr_rank": 2,
       "player": "Rory McIlroy",
-      "points": 410,
+      "points": 445,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
@@ -116,14 +184,199 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T40",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
         }
       },
-      "sport_rank": 2
+      "sport_rank": 3
+    },
+    {
+      "owgr_rank": 10,
+      "player": "Xander Schauffele",
+      "points": 430,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "10",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "8",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "15",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T18",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 4
+    },
+    {
+      "owgr_rank": 4,
+      "player": "Cameron Young",
+      "points": 420,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "6",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "30",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "48",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "2",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 200
+        }
+      },
+      "sport_rank": 5
+    },
+    {
+      "owgr_rank": 18,
+      "player": "Ludvig Aberg",
+      "points": 400,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "22",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "6",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "17",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T9",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        }
+      },
+      "sport_rank": 6
     },
     {
       "owgr_rank": 16,
@@ -171,36 +424,37 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 3
+      "sport_rank": 7
     },
     {
-      "owgr_rank": 9,
-      "player": "Sam Burns",
-      "points": 360,
+      "owgr_rank": 22,
+      "player": "Ryan Fox",
+      "points": 345,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": "8",
-          "rounds_played": 4,
+          "position": "56",
+          "rounds_played": 2,
           "rounds": [
             1,
-            2,
-            3,
-            4
+            2
           ],
-          "made_cut": true,
-          "points": 125
+          "made_cut": false,
+          "points": 0
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "31",
+          "position": "39",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -213,7 +467,7 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "2",
+          "position": "24",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -222,73 +476,23 @@
             4
           ],
           "made_cut": true,
-          "points": 200
+          "points": 60
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "1",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 250
         }
       },
-      "sport_rank": 4
-    },
-    {
-      "owgr_rank": 10,
-      "player": "Xander Schauffele",
-      "points": 340,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "10",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 125
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "8",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 125
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "15",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 90
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 5
+      "sport_rank": 8
     },
     {
       "owgr_rank": 17,
@@ -336,14 +540,75 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 6
+      "sport_rank": 9
+    },
+    {
+      "owgr_rank": 24,
+      "player": "Tyrrell Hatton",
+      "points": 315,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "3",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 175
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "107",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "8",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T69",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        }
+      },
+      "sport_rank": 10
     },
     {
       "owgr_rank": 5,
@@ -389,36 +654,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 7
-    },
-    {
-      "owgr_rank": 24,
-      "player": "Tyrrell Hatton",
-      "points": 300,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "3",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 175
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "107",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -426,10 +662,18 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "8",
+        }
+      },
+      "sport_rank": 11
+    },
+    {
+      "owgr_rank": 11,
+      "player": "Collin Morikawa",
+      "points": 290,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "7",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -440,21 +684,52 @@
           "made_cut": true,
           "points": 125
         },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "55",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "21",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T18",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
         }
       },
-      "sport_rank": 8
+      "sport_rank": 12
     },
     {
       "owgr_rank": 27,
       "player": "Justin Thomas",
-      "points": 275,
+      "points": 290,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
@@ -497,23 +772,86 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T65",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
         }
       },
-      "sport_rank": 9
+      "sport_rank": 13
     },
     {
-      "owgr_rank": 18,
-      "player": "Ludvig Aberg",
+      "owgr_rank": 6,
+      "player": "Russell Henley",
+      "points": 290,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "4",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 150
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "86",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "66",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T9",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        }
+      },
+      "sport_rank": 14
+    },
+    {
+      "owgr_rank": 8,
+      "player": "Chris Gotterup",
       "points": 275,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": "22",
+          "position": "29",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -526,7 +864,7 @@
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "6",
+          "position": "12",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -535,11 +873,69 @@
             4
           ],
           "made_cut": true,
-          "points": 125
+          "points": 90
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "17",
+          "position": "44",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T18",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 15
+    },
+    {
+      "owgr_rank": 7,
+      "player": "Tommy Fleetwood",
+      "points": 275,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "36",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "87",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "14",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -552,14 +948,77 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T4",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 150
         }
       },
-      "sport_rank": 10
+      "sport_rank": 16
+    },
+    {
+      "owgr_rank": 15,
+      "player": "Jon Rahm",
+      "points": 270,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "38",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "2",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 200
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "97",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T46",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        }
+      },
+      "sport_rank": 17
     },
     {
       "owgr_rank": 3,
@@ -607,49 +1066,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 11
-    },
-    {
-      "owgr_rank": 15,
-      "player": "Jon Rahm",
-      "points": 235,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "38",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "2",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 200
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "97",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -657,77 +1074,14 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 12
-    },
-    {
-      "owgr_rank": 4,
-      "player": "Cameron Young",
-      "points": 220,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "6",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 125
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "30",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 60
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "48",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 13
+      "sport_rank": 18
     },
     {
       "owgr_rank": 25,
       "player": "Ben Griffin",
-      "points": 215,
+      "points": 230,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
@@ -770,23 +1124,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 14
-    },
-    {
-      "owgr_rank": 11,
-      "player": "Collin Morikawa",
-      "points": 200,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "7",
+          "position": "T59",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -795,11 +1133,208 @@
             4
           ],
           "made_cut": true,
-          "points": 125
+          "points": 15
+        }
+      },
+      "sport_rank": 19
+    },
+    {
+      "owgr_rank": 26,
+      "player": "Hideki Matsuyama",
+      "points": 230,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "13",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "55",
+          "position": "33",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "68",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T14",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 20
+    },
+    {
+      "owgr_rank": 29,
+      "player": "Patrick Reed",
+      "points": 215,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "16",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "13",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "82",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T46",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        }
+      },
+      "sport_rank": 21
+    },
+    {
+      "owgr_rank": 21,
+      "player": "Alex Noren",
+      "points": 210,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "30",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "26",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "91",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T18",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 22
+    },
+    {
+      "owgr_rank": 59,
+      "player": "Corey Conners",
+      "points": 200,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "49",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "56",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -812,7 +1347,7 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "21",
+          "position": "28",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -825,14 +1360,19 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T14",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
         }
       },
-      "sport_rank": 15
+      "sport_rank": 23
     },
     {
       "owgr_rank": 66,
@@ -880,14 +1420,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 16
+      "sport_rank": 24
     },
     {
       "owgr_rank": 60,
@@ -935,23 +1478,197 @@
         },
         "open": {
           "name": "The Open Championship",
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        }
+      },
+      "sport_rank": 25
+    },
+    {
+      "owgr_rank": 14,
+      "player": "Si Woo Kim",
+      "points": 195,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "47",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "41",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "86",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T6",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        }
+      },
+      "sport_rank": 26
+    },
+    {
+      "owgr_rank": 46,
+      "player": "Alex Smalley",
+      "points": 190,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "3",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 175
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "118",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T53",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
         }
       },
-      "sport_rank": 17
+      "sport_rank": 27
     },
     {
-      "owgr_rank": 8,
-      "player": "Chris Gotterup",
+      "owgr_rank": 41,
+      "player": "Kurt Kitayama",
+      "points": 190,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "51",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "10",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "54",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T40",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        }
+      },
+      "sport_rank": 28
+    },
+    {
+      "owgr_rank": 45,
+      "player": "Adam Scott",
       "points": 185,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": "29",
+          "position": "25",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -964,20 +1681,29 @@
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "12",
-          "rounds_played": 4,
+          "position": "125",
+          "rounds_played": 2,
           "rounds": [
             1,
-            2,
-            3,
-            4
+            2
           ],
-          "made_cut": true,
-          "points": 90
+          "made_cut": false,
+          "points": 0
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "44",
+          "position": "113",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T9",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -986,18 +1712,10 @@
             4
           ],
           "made_cut": true,
-          "points": 35
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "points": 125
         }
       },
-      "sport_rank": 18
+      "sport_rank": 29
     },
     {
       "owgr_rank": 35,
@@ -1040,14 +1758,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 19
+      "sport_rank": 30
     },
     {
       "owgr_rank": 49,
@@ -1095,23 +1816,79 @@
         },
         "open": {
           "name": "The Open Championship",
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        }
+      },
+      "sport_rank": 31
+    },
+    {
+      "owgr_rank": 78,
+      "player": "Max Homa",
+      "points": 185,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "9",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "138",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T28",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
         }
       },
-      "sport_rank": 20
+      "sport_rank": 32
     },
     {
-      "owgr_rank": 29,
-      "player": "Patrick Reed",
-      "points": 180,
+      "owgr_rank": 28,
+      "player": "Patrick Cantlay",
+      "points": 185,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": "16",
+          "position": "15",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -1124,7 +1901,7 @@
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "13",
+          "position": "38",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -1133,11 +1910,11 @@
             4
           ],
           "made_cut": true,
-          "points": 90
+          "points": 35
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "82",
+          "position": "89",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -1148,31 +1925,28 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T28",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
         }
       },
-      "sport_rank": 21
+      "sport_rank": 33
     },
     {
-      "owgr_rank": 46,
-      "player": "Alex Smalley",
+      "owgr_rank": 23,
+      "player": "Ryan Gerard",
       "points": 175,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "3",
+          "position": "39",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -1181,11 +1955,24 @@
             4
           ],
           "made_cut": true,
-          "points": 175
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "73",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "118",
+          "position": "78",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -1196,14 +1983,19 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T9",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
         }
       },
-      "sport_rank": 22
+      "sport_rank": 34
     },
     {
       "owgr_rank": 32,
@@ -1241,14 +2033,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 23
+      "sport_rank": 35
     },
     {
       "owgr_rank": 76,
@@ -1291,36 +2086,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 24
-    },
-    {
-      "owgr_rank": 6,
-      "player": "Russell Henley",
-      "points": 165,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "4",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 150
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "86",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -1328,30 +2094,9 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "66",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 25
+      "sport_rank": 36
     },
     {
       "owgr_rank": 42,
@@ -1397,69 +2142,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 26
-    },
-    {
-      "owgr_rank": 41,
-      "player": "Kurt Kitayama",
-      "points": 155,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "51",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "10",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 125
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "54",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 27
+      "sport_rank": 37
     },
     {
       "owgr_rank": 38,
@@ -1500,14 +2193,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 28
+      "sport_rank": 38
     },
     {
       "owgr_rank": 92,
@@ -1555,29 +2251,24 @@
           "points": 0
         }
       },
-      "sport_rank": 29
+      "sport_rank": 39
     },
     {
-      "owgr_rank": 26,
-      "player": "Hideki Matsuyama",
+      "owgr_rank": 47,
+      "player": "Bud Cauley",
       "points": 140,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": "13",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 90
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "33",
+          "position": "32",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -1590,7 +2281,7 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "68",
+          "position": "59",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -1603,14 +2294,458 @@
         },
         "open": {
           "name": "The Open Championship",
+          "position": "T18",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 40
+    },
+    {
+      "owgr_rank": 58,
+      "player": "Casey Jarvis",
+      "points": 140,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "69",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "65",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "us_open": {
+          "name": "U.S. Open",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T6",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
         }
       },
-      "sport_rank": 30
+      "sport_rank": 41
+    },
+    {
+      "owgr_rank": 30,
+      "player": "Kristoffer Reitan",
+      "points": 140,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "45",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "54",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "96",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T18",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 42
+    },
+    {
+      "owgr_rank": 77,
+      "player": "Rasmus Neergaard-Petersen",
+      "points": 140,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "65",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "76",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T9",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        }
+      },
+      "sport_rank": 43
+    },
+    {
+      "owgr_rank": 61,
+      "player": "Sungjae Im",
+      "points": 140,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "46",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "84",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "51",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T14",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 44
+    },
+    {
+      "owgr_rank": 20,
+      "player": "Jacob Bridgeman",
+      "points": 130,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "42",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "123",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "39",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T28",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        }
+      },
+      "sport_rank": 45
+    },
+    {
+      "owgr_rank": 39,
+      "player": "Shane Lowry",
+      "points": 130,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "32",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "44",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "92",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T28",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        }
+      },
+      "sport_rank": 46
+    },
+    {
+      "owgr_rank": 52,
+      "player": "Lucas Herbert",
+      "points": 125,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "90",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T6",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 125
+        }
+      },
+      "sport_rank": 47
+    },
+    {
+      "owgr_rank": 53,
+      "player": "Marco Penge",
+      "points": 125,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "50",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "140",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T18",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 48
     },
     {
       "owgr_rank": 95,
@@ -1656,36 +2791,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 31
-    },
-    {
-      "owgr_rank": 78,
-      "player": "Max Homa",
-      "points": 125,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "9",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 125
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "138",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -1693,244 +2799,14 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 32
-    },
-    {
-      "owgr_rank": 28,
-      "player": "Patrick Cantlay",
-      "points": 125,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "15",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 90
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "38",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "89",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 33
-    },
-    {
-      "owgr_rank": 7,
-      "player": "Tommy Fleetwood",
-      "points": 125,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "36",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "87",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "14",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 90
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 34
-    },
-    {
-      "owgr_rank": 21,
-      "player": "Alex Noren",
-      "points": 120,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "30",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 60
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "26",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 60
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "91",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 35
-    },
-    {
-      "owgr_rank": 59,
-      "player": "Corey Conners",
-      "points": 110,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "49",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "56",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "28",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 60
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 36
+      "sport_rank": 49
     },
     {
       "owgr_rank": 33,
       "player": "Michael Brennan",
-      "points": 110,
+      "points": 125,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
@@ -1973,14 +2849,185 @@
         },
         "open": {
           "name": "The Open Championship",
+          "position": "T53",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        }
+      },
+      "sport_rank": 50
+    },
+    {
+      "owgr_rank": 71,
+      "player": "Pierceson Coody",
+      "points": 120,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "110",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "27",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T28",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
         }
       },
-      "sport_rank": 37
+      "sport_rank": 51
+    },
+    {
+      "owgr_rank": 90,
+      "player": "Sahith Theegala",
+      "points": 120,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "61",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "16",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T53",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        }
+      },
+      "sport_rank": 52
+    },
+    {
+      "owgr_rank": 51,
+      "player": "Keegan Bradley",
+      "points": 110,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "21",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "102",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "38",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T74",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        }
+      },
+      "sport_rank": 53
     },
     {
       "owgr_rank": 74,
@@ -2025,18 +3072,21 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 38
+      "sport_rank": 54
     },
     {
-      "owgr_rank": 90,
-      "player": "Sahith Theegala",
+      "owgr_rank": 48,
+      "player": "Rickie Fowler",
       "points": 105,
       "majors": {
         "masters": {
@@ -2049,7 +3099,7 @@
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "61",
+          "position": "64",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -2062,7 +3112,18 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "16",
+          "position": "84",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T18",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -2072,17 +3133,9 @@
           ],
           "made_cut": true,
           "points": 90
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 39
+      "sport_rank": 55
     },
     {
       "owgr_rank": 44,
@@ -2128,36 +3181,37 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 40
+      "sport_rank": 56
     },
     {
-      "owgr_rank": 51,
-      "player": "Keegan Bradley",
+      "owgr_rank": 19,
+      "player": "Robert MacIntyre",
       "points": 95,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": "21",
-          "rounds_played": 4,
+          "position": "64",
+          "rounds_played": 2,
           "rounds": [
             1,
-            2,
-            3,
-            4
+            2
           ],
-          "made_cut": true,
-          "points": 60
+          "made_cut": false,
+          "points": 0
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "102",
+          "position": "94",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -2168,7 +3222,7 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "38",
+          "position": "40",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -2181,47 +3235,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 41
-    },
-    {
-      "owgr_rank": 22,
-      "player": "Ryan Fox",
-      "points": 95,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "56",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "39",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "24",
+          "position": "T28",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -2231,17 +3245,9 @@
           ],
           "made_cut": true,
           "points": 60
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 42
+      "sport_rank": 57
     },
     {
       "owgr_rank": 34,
@@ -2285,14 +3291,126 @@
         },
         "open": {
           "name": "The Open Championship",
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        }
+      },
+      "sport_rank": 58
+    },
+    {
+      "owgr_rank": 56,
+      "player": "Alex Fitzpatrick",
+      "points": 90,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "77",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "29",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T71",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
         }
       },
-      "sport_rank": 43
+      "sport_rank": 59
+    },
+    {
+      "owgr_rank": 37,
+      "player": "Bryson DeChambeau",
+      "points": 90,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "61",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "113",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "85",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T14",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
+        }
+      },
+      "sport_rank": 60
     },
     {
       "owgr_rank": 50,
@@ -2333,14 +3451,65 @@
         },
         "open": {
           "name": "The Open Championship",
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        }
+      },
+      "sport_rank": 61
+    },
+    {
+      "owgr_rank": 73,
+      "player": "Jordan Smith",
+      "points": 90,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "139",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T18",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 90
         }
       },
-      "sport_rank": 44
+      "sport_rank": 62
     },
     {
       "owgr_rank": 13,
@@ -2384,14 +3553,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 45
+      "sport_rank": 63
     },
     {
       "owgr_rank": 68,
@@ -2439,86 +3611,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 46
-    },
-    {
-      "owgr_rank": 56,
-      "player": "Alex Fitzpatrick",
-      "points": 75,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "77",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "29",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 60
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 47
-    },
-    {
-      "owgr_rank": 20,
-      "player": "Jacob Bridgeman",
-      "points": 70,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "42",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "123",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -2526,35 +3619,14 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "39",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 48
+      "sport_rank": 64
     },
     {
       "owgr_rank": 88,
       "player": "Nick Taylor",
-      "points": 70,
+      "points": 85,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
@@ -2595,49 +3667,28 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T59",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
         }
       },
-      "sport_rank": 49
+      "sport_rank": 65
     },
     {
-      "owgr_rank": 39,
-      "player": "Shane Lowry",
-      "points": 70,
+      "owgr_rank": 31,
+      "player": "Min Woo Lee",
+      "points": 75,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": "32",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "44",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "92",
+          "position": "82",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -2646,78 +3697,9 @@
           "made_cut": false,
           "points": 0
         },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 50
-    },
-    {
-      "owgr_rank": 14,
-      "player": "Si Woo Kim",
-      "points": 70,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "47",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
         "pga": {
           "name": "PGA Championship",
-          "position": "41",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "86",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 51
-    },
-    {
-      "owgr_rank": 45,
-      "player": "Adam Scott",
-      "points": 60,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "25",
+          "position": "24",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -2728,20 +3710,9 @@
           "made_cut": true,
           "points": 60
         },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "125",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
         "us_open": {
           "name": "U.S. Open",
-          "position": "113",
+          "position": "100",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -2752,14 +3723,182 @@
         },
         "open": {
           "name": "The Open Championship",
+          "position": "T59",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        }
+      },
+      "sport_rank": 66
+    },
+    {
+      "owgr_rank": 54,
+      "player": "Matt Wallace",
+      "points": 70,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "45",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T40",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
         }
       },
-      "sport_rank": 52
+      "sport_rank": 67
+    },
+    {
+      "owgr_rank": 62,
+      "player": "John Keefer",
+      "points": 65,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "83",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "79",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "42",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T59",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        }
+      },
+      "sport_rank": 68
+    },
+    {
+      "owgr_rank": 70,
+      "player": "Ryo Hisatsune",
+      "points": 65,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "37",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "52",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T53",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
+        }
+      },
+      "sport_rank": 69
     },
     {
       "owgr_rank": 86,
@@ -2803,14 +3942,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 53
+      "sport_rank": 70
     },
     {
       "owgr_rank": 93,
@@ -2855,7 +3997,7 @@
           "points": 0
         }
       },
-      "sport_rank": 54
+      "sport_rank": 71
     },
     {
       "owgr_rank": 82,
@@ -2896,14 +4038,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 55
+      "sport_rank": 72
     },
     {
       "owgr_rank": 57,
@@ -2948,7 +4093,55 @@
           "points": 0
         }
       },
-      "sport_rank": 56
+      "sport_rank": 73
+    },
+    {
+      "owgr_rank": 96,
+      "player": "Jackson Suber",
+      "points": 60,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "75",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T28",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 60
+        }
+      },
+      "sport_rank": 74
     },
     {
       "owgr_rank": 80,
@@ -2992,23 +4185,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 57
-    },
-    {
-      "owgr_rank": 31,
-      "player": "Min Woo Lee",
-      "points": 60,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "82",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -3016,106 +4193,29 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "24",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 60
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "100",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 58
+      "sport_rank": 75
     },
     {
-      "owgr_rank": 71,
-      "player": "Pierceson Coody",
-      "points": 60,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "110",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "27",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 60
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 59
-    },
-    {
-      "owgr_rank": 47,
-      "player": "Bud Cauley",
+      "owgr_rank": 94,
+      "player": "Aldrich Potgieter",
       "points": 50,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "87",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "32",
+          "position": "42",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -3128,7 +4228,15 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "59",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T59",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -3138,70 +4246,9 @@
           ],
           "made_cut": true,
           "points": 15
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 60
-    },
-    {
-      "owgr_rank": 30,
-      "player": "Kristoffer Reitan",
-      "points": 50,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "45",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "54",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "96",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 61
+      "sport_rank": 76
     },
     {
       "owgr_rank": 64,
@@ -3247,49 +4294,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 62
-    },
-    {
-      "owgr_rank": 23,
-      "player": "Ryan Gerard",
-      "points": 50,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "39",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "73",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "78",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -3297,76 +4302,18 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 63
+      "sport_rank": 77
     },
     {
-      "owgr_rank": 70,
-      "player": "Ryo Hisatsune",
+      "owgr_rank": 36,
+      "player": "Sepp Straka",
       "points": 50,
       "majors": {
         "masters": {
           "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "37",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "52",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 64
-    },
-    {
-      "owgr_rank": 61,
-      "player": "Sungjae Im",
-      "points": 50,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "46",
+          "position": "43",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -3379,7 +4326,7 @@
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "84",
+          "position": "105",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -3390,7 +4337,18 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "51",
+          "position": "106",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T67",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -3400,65 +4358,9 @@
           ],
           "made_cut": true,
           "points": 15
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 65
-    },
-    {
-      "owgr_rank": 94,
-      "player": "Aldrich Potgieter",
-      "points": 35,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "87",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "42",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 66
+      "sport_rank": 78
     },
     {
       "owgr_rank": 65,
@@ -3502,23 +4404,50 @@
         },
         "open": {
           "name": "The Open Championship",
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        }
+      },
+      "sport_rank": 79
+    },
+    {
+      "owgr_rank": 55,
+      "player": "Eugenio Chacarra",
+      "points": 35,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
-        }
-      },
-      "sport_rank": 67
-    },
-    {
-      "owgr_rank": 53,
-      "player": "Marco Penge",
-      "points": 35,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "50",
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T46",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -3528,10 +4457,80 @@
           ],
           "made_cut": true,
           "points": 35
+        }
+      },
+      "sport_rank": 80
+    },
+    {
+      "owgr_rank": 12,
+      "player": "J.J. Spaun",
+      "points": 35,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "59",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "140",
+          "position": "111",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": "110",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T40",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 35
+        }
+      },
+      "sport_rank": 81
+    },
+    {
+      "owgr_rank": 40,
+      "player": "Michael Thorbjornsen",
+      "points": 35,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "pga": {
+          "name": "PGA Championship",
+          "position": "135",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -3550,31 +4549,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 68
-    },
-    {
-      "owgr_rank": 54,
-      "player": "Matt Wallace",
-      "points": 35,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "45",
+          "position": "T40",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -3584,25 +4559,9 @@
           ],
           "made_cut": true,
           "points": 35
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 69
+      "sport_rank": 82
     },
     {
       "owgr_rank": 43,
@@ -3646,23 +4605,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 70
-    },
-    {
-      "owgr_rank": 19,
-      "player": "Robert MacIntyre",
-      "points": 35,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "64",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -3670,10 +4613,26 @@
           ],
           "made_cut": false,
           "points": 0
+        }
+      },
+      "sport_rank": 83
+    },
+    {
+      "owgr_rank": 89,
+      "player": "Thomas Detry",
+      "points": 35,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "94",
+          "position": "89",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -3684,36 +4643,15 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "40",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 35
-        },
-        "open": {
-          "name": "The Open Championship",
           "position": null,
           "rounds_played": 0,
           "rounds": [],
           "made_cut": false,
           "points": 0
-        }
-      },
-      "sport_rank": 71
-    },
-    {
-      "owgr_rank": 36,
-      "player": "Sepp Straka",
-      "points": 35,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "43",
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T40",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -3723,10 +4661,29 @@
           ],
           "made_cut": true,
           "points": 35
+        }
+      },
+      "sport_rank": 84
+    },
+    {
+      "owgr_rank": 63,
+      "player": "Nicolas Echavarria",
+      "points": 30,
+      "majors": {
+        "masters": {
+          "name": "Masters Tournament",
+          "position": "85",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
+          "made_cut": false,
+          "points": 0
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "105",
+          "position": "131",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -3737,25 +4694,32 @@
         },
         "us_open": {
           "name": "U.S. Open",
-          "position": "106",
-          "rounds_played": 2,
+          "position": "57",
+          "rounds_played": 4,
           "rounds": [
             1,
-            2
+            2,
+            3,
+            4
           ],
-          "made_cut": false,
-          "points": 0
+          "made_cut": true,
+          "points": 15
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
+          "position": "T67",
+          "rounds_played": 4,
+          "rounds": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "made_cut": true,
+          "points": 15
         }
       },
-      "sport_rank": 72
+      "sport_rank": 85
     },
     {
       "owgr_rank": 79,
@@ -3798,23 +4762,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 73
-    },
-    {
-      "owgr_rank": 58,
-      "player": "Casey Jarvis",
-      "points": 15,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "69",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -3822,141 +4770,13 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "65",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 74
+      "sport_rank": 86
     },
     {
-      "owgr_rank": 63,
-      "player": "Nicolas Echavarria",
-      "points": 15,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "85",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "131",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "57",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 75
-    },
-    {
-      "owgr_rank": 77,
-      "player": "Rasmus Neergaard-Petersen",
-      "points": 15,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "65",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "76",
-          "rounds_played": 4,
-          "rounds": [
-            1,
-            2,
-            3,
-            4
-          ],
-          "made_cut": true,
-          "points": 15
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 76
-    },
-    {
-      "owgr_rank": 48,
-      "player": "Rickie Fowler",
+      "owgr_rank": 81,
+      "player": "Eric Cole",
       "points": 15,
       "majors": {
         "masters": {
@@ -3969,7 +4789,23 @@
         },
         "pga": {
           "name": "PGA Championship",
-          "position": "64",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "us_open": {
+          "name": "U.S. Open",
+          "position": null,
+          "rounds_played": 0,
+          "rounds": [],
+          "made_cut": false,
+          "points": 0
+        },
+        "open": {
+          "name": "The Open Championship",
+          "position": "T53",
           "rounds_played": 4,
           "rounds": [
             1,
@@ -3979,28 +4815,9 @@
           ],
           "made_cut": true,
           "points": 15
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "84",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 77
+      "sport_rank": 87
     },
     {
       "owgr_rank": 85,
@@ -4041,14 +4858,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 78
+      "sport_rank": 88
     },
     {
       "owgr_rank": 67,
@@ -4091,7 +4911,7 @@
           "points": 0
         }
       },
-      "sport_rank": 79
+      "sport_rank": 89
     },
     {
       "owgr_rank": 98,
@@ -4131,7 +4951,7 @@
           "points": 0
         }
       },
-      "sport_rank": 80
+      "sport_rank": 90
     },
     {
       "owgr_rank": 84,
@@ -4171,136 +4991,7 @@
           "points": 0
         }
       },
-      "sport_rank": 81
-    },
-    {
-      "owgr_rank": 37,
-      "player": "Bryson DeChambeau",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "61",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "113",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "85",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 82
-    },
-    {
-      "owgr_rank": 81,
-      "player": "Eric Cole",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 83
-    },
-    {
-      "owgr_rank": 55,
-      "player": "Eugenio Chacarra",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 84
+      "sport_rank": 91
     },
     {
       "owgr_rank": 69,
@@ -4342,106 +5033,17 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
+          "position": "CUT",
+          "rounds_played": 2,
+          "rounds": [
+            1,
+            2
+          ],
           "made_cut": false,
           "points": 0
         }
       },
-      "sport_rank": 85
-    },
-    {
-      "owgr_rank": 12,
-      "player": "J.J. Spaun",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": "59",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "111",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "110",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 86
-    },
-    {
-      "owgr_rank": 96,
-      "player": "Jackson Suber",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "75",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 87
+      "sport_rank": 92
     },
     {
       "owgr_rank": 100,
@@ -4481,7 +5083,7 @@
           "points": 0
         }
       },
-      "sport_rank": 88
+      "sport_rank": 93
     },
     {
       "owgr_rank": 97,
@@ -4520,71 +5122,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 89
-    },
-    {
-      "owgr_rank": 62,
-      "player": "John Keefer",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 90
-    },
-    {
-      "owgr_rank": 73,
-      "player": "Jordan Smith",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "139",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -4592,25 +5130,9 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 91
+      "sport_rank": 94
     },
     {
       "owgr_rank": 99,
@@ -4643,39 +5165,7 @@
         },
         "open": {
           "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 92
-    },
-    {
-      "owgr_rank": 52,
-      "player": "Lucas Herbert",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": "90",
+          "position": "CUT",
           "rounds_played": 2,
           "rounds": [
             1,
@@ -4683,17 +5173,9 @@
           ],
           "made_cut": false,
           "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
         }
       },
-      "sport_rank": 93
+      "sport_rank": 95
     },
     {
       "owgr_rank": 91,
@@ -4733,50 +5215,7 @@
           "points": 0
         }
       },
-      "sport_rank": 94
-    },
-    {
-      "owgr_rank": 40,
-      "player": "Michael Thorbjornsen",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "135",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 95
+      "sport_rank": 96
     },
     {
       "owgr_rank": 83,
@@ -4819,7 +5258,7 @@
           "points": 0
         }
       },
-      "sport_rank": 96
+      "sport_rank": 97
     },
     {
       "owgr_rank": 72,
@@ -4859,7 +5298,7 @@
           "points": 0
         }
       },
-      "sport_rank": 97
+      "sport_rank": 98
     },
     {
       "owgr_rank": 87,
@@ -4899,7 +5338,7 @@
           "points": 0
         }
       },
-      "sport_rank": 98
+      "sport_rank": 99
     },
     {
       "owgr_rank": 75,
@@ -4917,49 +5356,6 @@
         "pga": {
           "name": "PGA Championship",
           "position": "119",
-          "rounds_played": 2,
-          "rounds": [
-            1,
-            2
-          ],
-          "made_cut": false,
-          "points": 0
-        },
-        "us_open": {
-          "name": "U.S. Open",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "open": {
-          "name": "The Open Championship",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        }
-      },
-      "sport_rank": 99
-    },
-    {
-      "owgr_rank": 89,
-      "player": "Thomas Detry",
-      "points": 0,
-      "majors": {
-        "masters": {
-          "name": "Masters Tournament",
-          "position": null,
-          "rounds_played": 0,
-          "rounds": [],
-          "made_cut": false,
-          "points": 0
-        },
-        "pga": {
-          "name": "PGA Championship",
-          "position": "89",
           "rounds_played": 2,
           "rounds": [
             1,
