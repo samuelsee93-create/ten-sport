@@ -1,0 +1,26 @@
+name: Build Ten Sport
+
+on:
+  push:
+    branches:
+      - main
+      - feature/v0.4-backend
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install
+      - name: Build app
+        run: npm run build
