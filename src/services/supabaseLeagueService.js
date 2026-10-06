@@ -134,7 +134,7 @@ export class SupabaseLeagueService {
     const availableLeagues = await this.loadAvailableLeagues(user.id);
 
     return {
-      version: 6,
+      version: 7,
       needsLeague: availableLeagues.length === 0,
       currentUserId: user.id,
       currentUser: {
@@ -330,9 +330,29 @@ export class SupabaseLeagueService {
     const audit = unwrap(auditResult, 'Load audit log') ?? [];
     const seasons = unwrap(seasonsResult, 'Load seasons') ?? [];
 
-    const [teamHistory, sportHistory] = await Promise.all([
+    const previousCompletedSeason = seasons.find(
+      (row) => row.id !== season.id && row.status === 'COMPLETE'
+    ) ?? null;
+
+    const [teamHistory, sportHistory, draftOrderRows, previousRoster] = await Promise.all([
       selectIn('season_team_results', '*', 'season_id', seasons.map((row) => row.id)),
       selectIn('season_sport_results', '*', 'season_id', seasons.map((row) => row.id)),
+      draft
+        ? unwrap(
+            await c.from('draft_order').select('*').eq('draft_id', draft.id).order('slot', { ascending: true }),
+            'Load draft order'
+          ) ?? []
+        : [],
+      previousCompletedSeason && team?.id
+        ? unwrap(
+            await c
+              .from('roster_memberships')
+              .select('*')
+              .eq('season_id', previousCompletedSeason.id)
+              .eq('team_id', team.id),
+            'Load keeper-eligible roster'
+          ) ?? []
+        : [],
     ]);
 
     const profileIds = [...new Set(teams.map((t) => t.owner_user_id))];
@@ -446,7 +466,7 @@ export class SupabaseLeagueService {
     };
 
     return {
-      version: 6,
+      version: 7,
       needsLeague: false,
       availableLeagues,
       currentUserId: user.id,
@@ -501,14 +521,29 @@ export class SupabaseLeagueService {
         assetId: row.asset_id,
         lineupStatus: row.lineup_status,
         acquiredAt: row.acquired_at,
-        rosterSlotType: row.roster_slot_type ?? 'FLEX',
-        rosterSlotSport: row.roster_slot_sport ?? null,
       })),
+      keeperEligibleRoster: previousRoster
+        .filter((row) => assets.some((asset) => asset.id === row.asset_id))
+        .map((row) => ({
+          id: row.id,
+          teamId: row.team_id,
+          assetId: row.asset_id,
+          lineupStatus: row.lineup_status,
+          acquiredAt: row.acquired_at,
+        })),
+      keeperSourceSeason: previousCompletedSeason
+        ? { id: previousCompletedSeason.id, label: previousCompletedSeason.label }
+        : null,
       keeperSelections: keepers.map((row) => ({
         id: row.id,
         teamId: row.team_id,
         assetId: row.asset_id,
         lockedAt: row.locked_at,
+        keeperYear: row.keeper_year,
+        originalDraftRound: row.original_draft_round,
+        costRound: row.cost_round,
+        forfeitedDraftPickId: row.forfeited_draft_pick_id,
+        sourceDraftSelectionId: row.source_draft_selection_id,
       })),
       draftPicks: picks.map((row) => ({
         id: row.id,
@@ -550,6 +585,11 @@ export class SupabaseLeagueService {
             status: draft.status,
             currentOverallPick: draft.current_overall_pick,
             rounds: draft.rounds,
+            orderMethod: draft.order_method,
+            order: draftOrderRows.map((row) => ({
+              teamId: row.team_id,
+              slot: row.slot,
+            })),
             selections: selections.map((row) => ({
               id: row.id,
               overallPick: row.overall_pick,
@@ -557,6 +597,7 @@ export class SupabaseLeagueService {
               teamId: row.team_id,
               assetId: row.asset_id,
               draftPickId: row.draft_pick_id,
+              selectionType: row.selection_type ?? 'DRAFT',
               createdAt: row.selected_at,
             })),
           }
@@ -574,7 +615,7 @@ export class SupabaseLeagueService {
     };
   }
 
-  async createLeague({ name, teamName, seasonLabel = '2026-27', scoringVersion = 'v1.0' }) {
+  async createLeague({ name, teamName, seasonLabel = '2026-27', scoringVersion = 'v1.2' }) {
     const { data, error } = await client().rpc('create_league', {
       p_name: name,
       p_team_name: teamName,
@@ -689,6 +730,28 @@ export class SupabaseLeagueService {
     });
     if (error) throw error;
     return this.refresh();
+  }
+
+  async setDraftOrder(teamIds) {
+    const state = this.requireState();
+    if (!state.draft?.id) throw new Error('No draft is configured for this season.');
+    const { error } = await client().rpc('set_draft_order', {
+      p_draft_id: state.draft.id,
+      p_team_ids: teamIds,
+    });
+    if (error) throw error;
+    return this.refresh();
+  }
+
+  async randomizeDraftOrder() {
+    const state = this.requireState();
+    if (!state.draft?.id) throw new Error('No draft is configured for this season.');
+    const { data, error } = await client().rpc('randomize_draft_order', {
+      p_draft_id: state.draft.id,
+    });
+    if (error) throw error;
+    await this.refresh();
+    return data;
   }
 
   async setDraftStatus(status) {
