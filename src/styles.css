@@ -218,3 +218,35 @@ select{background:#07131d;border:1px solid #284052;color:#fff;border-radius:10px
   .coverage-summary{align-items:flex-start;flex-direction:column}
   .sport-coverage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* v0.10 sortable asset table */
+.asset-toolbar-compact{grid-template-columns:minmax(260px,1fr) minmax(160px,220px) minmax(160px,220px)}
+.asset-table th.numeric .sort-header{justify-content:flex-end;width:100%}
+.sort-header{
+  appearance:none;
+  width:100%;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  letter-spacing:inherit;
+  text-transform:inherit;
+  padding:0;
+  cursor:pointer;
+  text-align:left;
+}
+.sort-header:hover,.sort-header.active{color:var(--accent)}
+.sort-indicator{font-size:13px;line-height:1;opacity:.7}
+.sort-header.active .sort-indicator{opacity:1}
+.rank-cell{white-space:nowrap;font-weight:800}
+.rank-cell span{color:#8298aa;font-weight:600;font-size:12px}
+
+.app.theme-light .rank-cell span{color:#607585}
+
+@media(max-width:700px){
+  .asset-toolbar-compact{grid-template-columns:1fr}
+}
