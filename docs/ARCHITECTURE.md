@@ -1,7 +1,7 @@
-# Ten Sport v0.3 Architecture
+# Ten Sport v0.4 Architecture
 
 ## Goal
-v0.3 separates fantasy-league rules from the React UI so the current local demo can be replaced by a hosted multi-user backend without rewriting screens or domain logic.
+v0.4 preserves the separated fantasy-league rules/UI contract and adds a hosted multi-user Supabase implementation behind the same service-facing operations.
 
 ## Layers
 
@@ -28,7 +28,7 @@ Current operations include:
 - make draft selection
 
 ### Persistence
-v0.3 persists demo state in browser local storage. This is intentionally temporary. `db/schema.sql` defines the hosted relational model.
+Local storage remains available as a development fallback. Hosted mode uses Supabase Auth + Postgres with RLS, transactional RPCs, Realtime refreshes and migrations under `db/migrations/`.
 
 ## Event locking
 Lineup status must be snapshotted at a scoring event's lock time. The eventual scoring pipeline should create:
@@ -54,11 +54,10 @@ A draft selection should atomically validate the current pick owner, asset avail
 ## Realtime
 The live draft will subscribe to changes in draft status, current pick and selections. Trade status and league activity can use the same realtime channel/subscription approach.
 
-## Next backend milestone
-- hosted authentication
-- Postgres deployment
-- row-level authorization/permissions
-- realtime subscriptions
-- transactional RPC/functions
-- file storage for team logos
-- league invitations
+## Remaining backend milestones
+- provision/connect the live Supabase project and apply migrations
+- run security/performance advisors against the live project
+- storage bucket upload flow for team logos
+- league invitations/onboarding
+- commissioner season rollover / keeper finalization workflow
+- production scoring ingestion and event settlement
