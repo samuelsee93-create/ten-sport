@@ -9,6 +9,7 @@ from pathlib import Path
 
 LEADERBOARD_URL = "https://github.com/array-carpenter/golfastr/releases/download/leaderboards/leaderboards_2026.csv"
 HOLES_URL = "https://github.com/array-carpenter/golfastr/releases/download/holes/holes_2026.csv"
+OPEN_URL = "https://raw.githubusercontent.com/devintyler-systems/PGA-VenueDNA-Tier-Engine/main/events/2026_Finished_Events/2026_the_open_championship/output/final_tournament/final_leaderboard.csv"
 RANKING_SOURCE = "https://www.golf-rankings.com/"
 RESULT_SOURCE = "https://github.com/array-carpenter/golfastr/releases/tag/leaderboards"
 RANKING_SNAPSHOT = "2026-10-04"
@@ -52,6 +53,7 @@ ALIASES = {
     "nico echavarria": "Nicolas Echavarria",
     "sam stevens": "Samuel Stevens",
     "matthias schmid": "Matti Schmid",
+    "johnny keefer": "John Keefer",
     "rasmus neergaard petersen": "Rasmus Neergaard-Petersen",
     "michael thorbjornsen": "Michael Thorbjornsen",
 }
@@ -73,7 +75,13 @@ for alias, canonical in ALIASES.items():
     DISPLAY_BY_NORM[normalize(alias)] = canonical
 
 def canonical_player(value):
-    return DISPLAY_BY_NORM.get(normalize(value))
+    direct = DISPLAY_BY_NORM.get(normalize(value))
+    if direct:
+        return direct
+    if value and "," in value:
+        last, first = value.split(",", 1)
+        return DISPLAY_BY_NORM.get(normalize(first + " " + last))
+    return None
 
 def major_key(name):
     n = normalize(name)
@@ -127,8 +135,10 @@ def main():
     cache.mkdir(parents=True, exist_ok=True)
     lb_path = cache / "leaderboards_2026.csv"
     holes_path = cache / "holes_2026.csv"
+    open_path = cache / "open_championship_2026.csv"
     download(LEADERBOARD_URL, lb_path)
     download(HOLES_URL, holes_path)
+    download(OPEN_URL, open_path)
 
     rounds = defaultdict(set)
     found_major_names = defaultdict(set)
@@ -160,6 +170,21 @@ def main():
             if not player:
                 continue
             positions[(player, mk)] = row.get("position")
+
+    # The ESPN-derived golfastr feed does not include The Open Championship.
+    # Supplement it with a complete 2026 Open final leaderboard that includes R1-R4.
+    found_major_names["open"].add("The Open Championship")
+    with open_path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            player = canonical_player(row.get("player_name"))
+            if not player:
+                continue
+            positions[(player, "open")] = row.get("pos")
+            for round_number, column in enumerate(("r1_score","r2_score","r3_score","r4_score"), start=1):
+                value = (row.get(column) or "").strip().lower()
+                if value and value not in ("null","nan","na"):
+                    rounds[(player, "open")].add(round_number)
 
     report = []
     for owgr, player in TOP_100:
