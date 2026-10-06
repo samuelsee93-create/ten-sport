@@ -1,5 +1,7 @@
 import { supabase, supabaseConfigured } from './supabaseClient.js';
 
+const ACTIVE_LEAGUE_KEY = 'ten-sport-active-league';
+
 function client() {
   if (!supabaseConfigured || !supabase) throw new Error('Supabase is not configured.');
   return supabase;
@@ -26,12 +28,24 @@ function sumBy(rows, key, value) {
   }, {});
 }
 
+function saveActiveLeague(id) {
+  if (typeof localStorage === 'undefined') return;
+  if (id) localStorage.setItem(ACTIVE_LEAGUE_KEY, id);
+  else localStorage.removeItem(ACTIVE_LEAGUE_KEY);
+}
+
+function storedActiveLeague() {
+  if (typeof localStorage === 'undefined') return null;
+  return localStorage.getItem(ACTIVE_LEAGUE_KEY);
+}
+
 export class SupabaseLeagueService {
   constructor() {
     this.listeners = new Set();
     this.state = null;
     this.unsubscribeRealtime = null;
     this.refreshQueued = false;
+    this.activeLeagueId = storedActiveLeague();
   }
 
   getState() {
@@ -49,29 +63,141 @@ export class SupabaseLeagueService {
   }
 
   requireState() {
-    if (!this.state) throw new Error('Hosted league state has not been loaded yet.');
+    if (!this.state || this.state.needsLeague) {
+      throw new Error('Hosted league state has not been loaded yet.');
+    }
     return this.state;
   }
 
+  async getAuthenticatedUser() {
+    const c = client();
+    const { data: { user }, error } = await c.auth.getUser();
+    if (error) {
+      const noSession =
+        error.name === 'AuthSessionMissingError'
+        || /auth session missing/i.test(error.message ?? '');
+      if (noSession) throw new Error('Authentication required.');
+      throw error;
+    }
+    if (!user) throw new Error('Authentication required.');
+    return user;
+  }
+
+  async loadAvailableLeagues(userId) {
+    const memberships = unwrap(
+      await client()
+        .from('league_memberships')
+        .select('league_id,role,status')
+        .eq('user_id', userId)
+        .eq('status', 'ACTIVE'),
+      'Load league memberships'
+    ) ?? [];
+
+    const leagues = await selectIn(
+      'leagues',
+      'id,name,logo_url,join_code,primary_color,accent_color,theme_mode,created_at',
+      'id',
+      memberships.map((row) => row.league_id)
+    );
+    const leagueById = Object.fromEntries(leagues.map((row) => [row.id, row]));
+
+    return memberships
+      .map((membership) => {
+        const league = leagueById[membership.league_id];
+        if (!league) return null;
+        return {
+          id: league.id,
+          name: league.name,
+          logoUrl: league.logo_url ?? null,
+          joinCode: league.join_code,
+          role: membership.role,
+          primaryColor: league.primary_color ?? '#6ee7b7',
+          accentColor: league.accent_color ?? '#22d3ee',
+          themeMode: league.theme_mode ?? 'dark',
+          createdAt: league.created_at,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async loadAccountState() {
+    const user = await this.getAuthenticatedUser();
+    const profile = unwrap(
+      await client()
+        .from('profiles')
+        .select('id,display_name,avatar_url')
+        .eq('id', user.id)
+        .maybeSingle(),
+      'Load profile'
+    );
+    const availableLeagues = await this.loadAvailableLeagues(user.id);
+
+    return {
+      version: 6,
+      needsLeague: availableLeagues.length === 0,
+      currentUserId: user.id,
+      currentUser: {
+        id: user.id,
+        displayName: profile?.display_name ?? user.email ?? 'Manager',
+        avatarUrl: profile?.avatar_url ?? null,
+      },
+      availableLeagues,
+    };
+  }
+
   async initialize() {
-    const state = await this.refresh();
+    const account = await this.loadAccountState();
+
+    if (account.needsLeague) {
+      this.activeLeagueId = null;
+      saveActiveLeague(null);
+      this.state = account;
+      this.emit();
+      return this.getState();
+    }
+
+    const preferred = account.availableLeagues.some((league) => league.id === this.activeLeagueId)
+      ? this.activeLeagueId
+      : account.availableLeagues[0].id;
+
+    this.activeLeagueId = preferred;
+    saveActiveLeague(preferred);
+    const state = await this.refresh(preferred);
     this.startRealtime();
     return state;
   }
 
-  async refresh() {
-    const next = await this.loadLeagueState();
+  async refresh(leagueId = this.activeLeagueId) {
+    if (!leagueId) {
+      const account = await this.loadAccountState();
+      this.state = account;
+      this.emit();
+      return this.getState();
+    }
+
+    const next = await this.loadLeagueState(leagueId);
+    this.activeLeagueId = leagueId;
+    saveActiveLeague(leagueId);
     this.state = next;
     this.emit();
     return this.getState();
   }
 
+  async switchLeague(leagueId) {
+    this.unsubscribeRealtime?.();
+    this.unsubscribeRealtime = null;
+    const next = await this.refresh(leagueId);
+    this.startRealtime();
+    return next;
+  }
+
   queueRefresh() {
-    if (this.refreshQueued) return;
+    if (this.refreshQueued || !this.activeLeagueId) return;
     this.refreshQueued = true;
     setTimeout(async () => {
       try {
-        await this.refresh();
+        await this.refresh(this.activeLeagueId);
       } finally {
         this.refreshQueued = false;
       }
@@ -79,7 +205,7 @@ export class SupabaseLeagueService {
   }
 
   startRealtime() {
-    if (!this.state) return;
+    if (!this.state || this.state.needsLeague || !this.state.league) return;
     this.unsubscribeRealtime?.();
     this.unsubscribeRealtime = this.subscribeToLeagueState(
       {
@@ -97,74 +223,28 @@ export class SupabaseLeagueService {
     this.listeners.clear();
   }
 
-  async getCurrentContext() {
+  async getCurrentContext(leagueId) {
     const c = client();
-    const {
-      data: { user },
-      error: userError,
-    } = await c.auth.getUser();
-    if (userError) {
-      const noSession =
-        userError.name === 'AuthSessionMissingError'
-        || /auth session missing/i.test(userError.message ?? '');
-      if (noSession) throw new Error('Authentication required.');
-      throw userError;
-    }
-    if (!user) throw new Error('Authentication required.');
+    const user = await this.getAuthenticatedUser();
 
-    const membershipRows = unwrap(
+    const membership = unwrap(
       await c
         .from('league_memberships')
         .select('league_id,role,status')
+        .eq('league_id', leagueId)
         .eq('user_id', user.id)
         .eq('status', 'ACTIVE')
-        .limit(1),
+        .maybeSingle(),
       'Load league membership'
     );
 
-    let membership = membershipRows?.[0] ?? null;
-    let leagueId = membership?.league_id ?? null;
+    if (!membership) throw new Error('You are not an active member of this league.');
 
-    if (!leagueId) {
-      const commissionerRows = unwrap(
-        await c
-          .from('leagues')
-          .select('id')
-          .eq('commissioner_user_id', user.id)
-          .limit(1),
-        'Load commissioner league'
-      );
-      leagueId = commissionerRows?.[0]?.id ?? null;
-      if (leagueId) membership = { league_id: leagueId, role: 'COMMISSIONER', status: 'ACTIVE' };
-    }
-
-    if (!leagueId) {
-      const { error: bootstrapError } = await c.rpc('bootstrap_first_league');
-      if (!bootstrapError) {
-        const refreshedMemberships = unwrap(
-          await c
-            .from('league_memberships')
-            .select('league_id,role,status')
-            .eq('user_id', user.id)
-            .eq('status', 'ACTIVE')
-            .limit(1),
-          'Reload league membership'
-        );
-        membership = refreshedMemberships?.[0] ?? null;
-        leagueId = membership?.league_id ?? null;
-      } else if (!bootstrapError.message?.includes('League already exists')) {
-        throw bootstrapError;
-      }
-    }
-
-    if (!leagueId) {
-      throw new Error('Your account is not assigned to an active Ten Sport league yet.');
-    }
-
-    const [profileResult, leagueResult, teamResult] = await Promise.all([
+    const [profileResult, leagueResult, teamResult, availableLeagues] = await Promise.all([
       c.from('profiles').select('id,display_name,avatar_url').eq('id', user.id).maybeSingle(),
       c.from('leagues').select('*').eq('id', leagueId).single(),
       c.from('teams').select('*').eq('league_id', leagueId).eq('owner_user_id', user.id).maybeSingle(),
+      this.loadAvailableLeagues(user.id),
     ]);
 
     const league = unwrap(leagueResult, 'Load league');
@@ -177,7 +257,7 @@ export class SupabaseLeagueService {
         .select('*')
         .eq('league_id', leagueId)
         .in('status', ['ACTIVE', 'SETUP'])
-        .order('keeper_deadline', { ascending: false, nullsFirst: false })
+        .order('label', { ascending: false })
         .limit(1)
         .maybeSingle(),
       'Load current season'
@@ -198,13 +278,13 @@ export class SupabaseLeagueService {
 
     if (!season) throw new Error('This league does not have a season yet.');
 
-    return { user, profile, membership, league, season, team };
+    return { user, profile, membership, league, season, team, availableLeagues };
   }
 
-  async loadLeagueState() {
+  async loadLeagueState(leagueId) {
     const c = client();
-    const context = await this.getCurrentContext();
-    const { user, profile, membership, league, season, team } = context;
+    const context = await this.getCurrentContext(leagueId);
+    const { user, profile, membership, league, season, team, availableLeagues } = context;
 
     const [
       membershipsResult,
@@ -214,22 +294,26 @@ export class SupabaseLeagueService {
       keepersResult,
       picksResult,
       tradesResult,
+      waiversResult,
       draftResult,
       eventsResult,
       historyResult,
       auditResult,
+      seasonsResult,
     ] = await Promise.all([
       c.from('league_memberships').select('league_id,user_id,role,status').eq('league_id', league.id).eq('status', 'ACTIVE'),
-      c.from('teams').select('*').eq('league_id', league.id),
+      c.from('teams').select('*').eq('league_id', league.id).order('created_at', { ascending: true }),
       c.from('assets').select('*').eq('active', true),
       c.from('roster_memberships').select('*').eq('season_id', season.id),
       c.from('keeper_selections').select('*').eq('season_id', season.id),
       c.from('draft_picks').select('*').eq('league_id', league.id),
       c.from('trades').select('*').eq('season_id', season.id).order('created_at', { ascending: false }),
+      c.from('waiver_transactions').select('*').eq('season_id', season.id).order('created_at', { ascending: false }),
       c.from('drafts').select('*').eq('season_id', season.id).maybeSingle(),
       c.from('scoring_events').select('*').eq('season_id', season.id),
       c.from('asset_season_stats').select('*').eq('scoring_version', season.scoring_version),
-      c.from('audit_log').select('*').eq('league_id', league.id).order('created_at', { ascending: false }).limit(100),
+      c.from('audit_log').select('*').eq('league_id', league.id).order('created_at', { ascending: false }).limit(150),
+      c.from('seasons').select('id,label,status').eq('league_id', league.id).order('label', { ascending: false }),
     ]);
 
     const memberships = unwrap(membershipsResult, 'Load memberships') ?? [];
@@ -239,10 +323,17 @@ export class SupabaseLeagueService {
     const keepers = unwrap(keepersResult, 'Load keepers') ?? [];
     const picks = unwrap(picksResult, 'Load draft picks') ?? [];
     const trades = unwrap(tradesResult, 'Load trades') ?? [];
+    const waivers = unwrap(waiversResult, 'Load waiver transactions') ?? [];
     const draft = unwrap(draftResult, 'Load draft') ?? null;
     const events = unwrap(eventsResult, 'Load scoring events') ?? [];
     const history = unwrap(historyResult, 'Load asset history') ?? [];
     const audit = unwrap(auditResult, 'Load audit log') ?? [];
+    const seasons = unwrap(seasonsResult, 'Load seasons') ?? [];
+
+    const [teamHistory, sportHistory] = await Promise.all([
+      selectIn('season_team_results', '*', 'season_id', seasons.map((row) => row.id)),
+      selectIn('season_sport_results', '*', 'season_id', seasons.map((row) => row.id)),
+    ]);
 
     const profileIds = [...new Set(teams.map((t) => t.owner_user_id))];
     const profiles = await selectIn('profiles', 'id,display_name,avatar_url', 'id', profileIds);
@@ -321,13 +412,43 @@ export class SupabaseLeagueService {
       });
       return acc;
     }, {});
-
     Object.values(historyByAssetId).forEach((rows) => {
       rows.sort((a, b) => b.seasonLabel.localeCompare(a.seasonLabel));
     });
 
+    const seasonById = Object.fromEntries(seasons.map((row) => [row.id, row]));
+    const leagueHistory = {
+      seasons: seasons.map((row) => ({
+        id: row.id,
+        label: row.label,
+        status: row.status,
+        results: teamHistory
+          .filter((result) => result.season_id === row.id)
+          .map((result) => ({
+            id: result.id,
+            teamId: result.team_id,
+            teamName: result.team_name,
+            managerName: result.manager_name,
+            finalRank: result.final_rank,
+            totalPoints: Number(result.total_points ?? 0),
+            finalizedAt: result.finalized_at,
+          }))
+          .sort((a, b) => a.finalRank - b.finalRank),
+      })),
+      sportResults: sportHistory.map((result) => ({
+        id: result.id,
+        seasonId: result.season_id,
+        seasonLabel: seasonById[result.season_id]?.label ?? 'Unknown',
+        teamId: result.team_id,
+        sport: result.sport,
+        points: Number(result.points ?? 0),
+      })),
+    };
+
     return {
-      version: 4,
+      version: 6,
+      needsLeague: false,
+      availableLeagues,
       currentUserId: user.id,
       currentTeamId,
       currentRole: membership?.role ?? 'MANAGER',
@@ -339,8 +460,10 @@ export class SupabaseLeagueService {
       league: {
         id: league.id,
         name: league.name,
+        joinCode: league.join_code,
         seasonId: season.id,
         season: season.label,
+        seasonStatus: season.status,
         scoringVersion: season.scoring_version,
         keeperDeadline: season.keeper_deadline,
         tradeDeadline: season.trade_deadline,
@@ -361,6 +484,7 @@ export class SupabaseLeagueService {
         managerName: profileById[row.owner_user_id]?.display_name ?? 'Manager',
         managerAvatarUrl: profileById[row.owner_user_id]?.avatar_url ?? null,
         role: membershipByUserId[row.owner_user_id]?.role ?? 'MANAGER',
+        createdAt: row.created_at,
       })),
       assets: assets.map((row) => ({
         id: row.id,
@@ -377,6 +501,8 @@ export class SupabaseLeagueService {
         assetId: row.asset_id,
         lineupStatus: row.lineup_status,
         acquiredAt: row.acquired_at,
+        rosterSlotType: row.roster_slot_type ?? 'FLEX',
+        rosterSlotSport: row.roster_slot_sport ?? null,
       })),
       keeperSelections: keepers.map((row) => ({
         id: row.id,
@@ -407,10 +533,18 @@ export class SupabaseLeagueService {
           draftPickId: item.draft_pick_id,
         })),
       })),
+      waiverTransactions: waivers.map((row) => ({
+        id: row.id,
+        teamId: row.team_id,
+        addedAssetId: row.added_asset_id,
+        droppedAssetId: row.dropped_asset_id,
+        transactionType: row.transaction_type,
+        createdAt: row.created_at,
+      })),
       draft: draft
         ? {
             id: draft.id,
-            season: new Date(draft.scheduled_at ?? Date.now()).getFullYear(),
+            season: draft.scheduled_at ? new Date(draft.scheduled_at).getFullYear() : null,
             scheduledAt: draft.scheduled_at,
             pickTimerSeconds: draft.pick_timer_seconds,
             status: draft.status,
@@ -427,6 +561,7 @@ export class SupabaseLeagueService {
             })),
           }
         : null,
+      leagueHistory,
       lockedAssetIds,
       transactionLog: audit.map((row) => ({
         id: row.id,
@@ -437,6 +572,34 @@ export class SupabaseLeagueService {
       teamPointsById,
       teamAssetPointsById,
     };
+  }
+
+  async createLeague({ name, teamName, seasonLabel = '2026-27', scoringVersion = 'v1.0' }) {
+    const { data, error } = await client().rpc('create_league', {
+      p_name: name,
+      p_team_name: teamName,
+      p_season_label: seasonLabel,
+      p_scoring_version: scoringVersion,
+    });
+    if (error) throw error;
+    this.activeLeagueId = data.league_id;
+    saveActiveLeague(data.league_id);
+    const state = await this.refresh(data.league_id);
+    this.startRealtime();
+    return state;
+  }
+
+  async joinLeague({ code, teamName }) {
+    const { data, error } = await client().rpc('join_league', {
+      p_code: code,
+      p_team_name: teamName,
+    });
+    if (error) throw error;
+    this.activeLeagueId = data.league_id;
+    saveActiveLeague(data.league_id);
+    const state = await this.refresh(data.league_id);
+    this.startRealtime();
+    return state;
   }
 
   async updateLeagueAppearance({ name, logoUrl, primaryColor, accentColor, themeMode }) {
@@ -504,12 +667,32 @@ export class SupabaseLeagueService {
     return this.refresh();
   }
 
+  async setDraftSchedule(scheduledAt) {
+    const state = this.requireState();
+    if (!state.draft?.id) throw new Error('No draft is configured for this season.');
+    const { error } = await client().rpc('set_draft_schedule', {
+      p_draft_id: state.draft.id,
+      p_scheduled_at: scheduledAt,
+    });
+    if (error) throw error;
+    return this.refresh();
+  }
+
   async setDraftStatus(status) {
     const state = this.requireState();
     if (!state.draft?.id) throw new Error('No draft is configured for this season.');
     const { error } = await client().rpc('set_draft_status', {
       p_draft_id: state.draft.id,
       p_status: status,
+    });
+    if (error) throw error;
+    return this.refresh();
+  }
+
+  async finalizeSeason() {
+    const state = this.requireState();
+    const { error } = await client().rpc('finalize_season', {
+      p_season_id: state.league.seasonId,
     });
     if (error) throw error;
     return this.refresh();
@@ -544,7 +727,8 @@ export class SupabaseLeagueService {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `league_id=eq.${leagueId}` }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'roster_memberships', filter: `season_id=eq.${seasonId}` }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'keeper_selections', filter: `season_id=eq.${seasonId}` }, onChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trades', filter: `season_id=eq.${seasonId}` }, onChange);
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trades', filter: `season_id=eq.${seasonId}` }, onChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'waiver_transactions', filter: `season_id=eq.${seasonId}` }, onChange);
 
     if (draftId) {
       channel = channel
