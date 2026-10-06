@@ -655,6 +655,19 @@ export class SupabaseLeagueService {
     return data;
   }
 
+  async claimWaiverAsset(assetId, dropAssetId = null) {
+    const state = this.requireState();
+    if (!state.currentTeamId) throw new Error('No team is assigned to this account in the current league.');
+    const { data, error } = await client().rpc('claim_waiver_asset', {
+      p_team_id: state.currentTeamId,
+      p_asset_id: assetId,
+      p_drop_asset_id: dropAssetId,
+    });
+    if (error) throw error;
+    await this.refresh();
+    return data;
+  }
+
   async acceptTrade(tradeId) {
     const { error } = await client().rpc('accept_trade', { p_trade_id: tradeId });
     if (error) throw error;
