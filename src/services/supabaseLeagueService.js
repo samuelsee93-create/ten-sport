@@ -216,6 +216,7 @@ export class SupabaseLeagueService {
       tradesResult,
       draftResult,
       eventsResult,
+      historyResult,
       auditResult,
     ] = await Promise.all([
       c.from('league_memberships').select('league_id,user_id,role,status').eq('league_id', league.id).eq('status', 'ACTIVE'),
@@ -227,6 +228,7 @@ export class SupabaseLeagueService {
       c.from('trades').select('*').eq('season_id', season.id).order('created_at', { ascending: false }),
       c.from('drafts').select('*').eq('season_id', season.id).maybeSingle(),
       c.from('scoring_events').select('*').eq('season_id', season.id),
+      c.from('asset_season_stats').select('*').eq('scoring_version', season.scoring_version),
       c.from('audit_log').select('*').eq('league_id', league.id).order('created_at', { ascending: false }).limit(100),
     ]);
 
@@ -239,6 +241,7 @@ export class SupabaseLeagueService {
     const trades = unwrap(tradesResult, 'Load trades') ?? [];
     const draft = unwrap(draftResult, 'Load draft') ?? null;
     const events = unwrap(eventsResult, 'Load scoring events') ?? [];
+    const history = unwrap(historyResult, 'Load asset history') ?? [];
     const audit = unwrap(auditResult, 'Load audit log') ?? [];
 
     const profileIds = [...new Set(teams.map((t) => t.owner_user_id))];
@@ -306,6 +309,23 @@ export class SupabaseLeagueService {
       return acc;
     }, {});
 
+    const historyByAssetId = history.reduce((acc, row) => {
+      (acc[row.asset_id] ??= []).push({
+        id: row.id,
+        seasonLabel: row.season_label,
+        scoringVersion: row.scoring_version,
+        points: Number(row.points ?? 0),
+        rank: row.rank,
+        sourceRef: row.source_ref,
+        breakdown: row.breakdown ?? {},
+      });
+      return acc;
+    }, {});
+
+    Object.values(historyByAssetId).forEach((rows) => {
+      rows.sort((a, b) => b.seasonLabel.localeCompare(a.seasonLabel));
+    });
+
     return {
       version: 4,
       currentUserId: user.id,
@@ -328,6 +348,10 @@ export class SupabaseLeagueService {
         activeSlots: league.active_slots,
         benchSlots: league.bench_slots,
         keeperSlots: league.keeper_slots,
+        logoUrl: league.logo_url ?? null,
+        primaryColor: league.primary_color ?? '#6ee7b7',
+        accentColor: league.accent_color ?? '#22d3ee',
+        themeMode: league.theme_mode ?? 'dark',
       },
       teams: teams.map((row) => ({
         id: row.id,
@@ -345,6 +369,7 @@ export class SupabaseLeagueService {
         externalKey: row.external_key,
         seasonPoints: seasonPointsByAsset[row.id] ?? 0,
         pointsForTeam: currentTeamAssetPoints[row.id] ?? 0,
+        history: historyByAssetId[row.id] ?? [],
       })),
       rosterMemberships: roster.map((row) => ({
         id: row.id,
@@ -412,6 +437,20 @@ export class SupabaseLeagueService {
       teamPointsById,
       teamAssetPointsById,
     };
+  }
+
+  async updateLeagueAppearance({ name, logoUrl, primaryColor, accentColor, themeMode }) {
+    const state = this.requireState();
+    const { error } = await client().rpc('update_league_appearance', {
+      p_league_id: state.league.id,
+      p_name: name,
+      p_logo_url: logoUrl,
+      p_primary_color: primaryColor,
+      p_accent_color: accentColor,
+      p_theme_mode: themeMode,
+    });
+    if (error) throw error;
+    return this.refresh();
   }
 
   async renameTeam(teamId, name) {
@@ -501,6 +540,7 @@ export class SupabaseLeagueService {
   subscribeToLeagueState({ leagueId, seasonId, draftId }, onChange) {
     let channel = client()
       .channel(`league:${leagueId}:${seasonId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leagues', filter: `id=eq.${leagueId}` }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `league_id=eq.${leagueId}` }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'roster_memberships', filter: `season_id=eq.${seasonId}` }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'keeper_selections', filter: `season_id=eq.${seasonId}` }, onChange)
