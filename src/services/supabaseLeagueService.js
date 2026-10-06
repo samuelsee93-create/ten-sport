@@ -134,7 +134,7 @@ export class SupabaseLeagueService {
     const availableLeagues = await this.loadAvailableLeagues(user.id);
 
     return {
-      version: 7,
+      version: 8,
       needsLeague: availableLeagues.length === 0,
       currentUserId: user.id,
       currentUser: {
@@ -466,7 +466,7 @@ export class SupabaseLeagueService {
     };
 
     return {
-      version: 7,
+      version: 8,
       needsLeague: false,
       availableLeagues,
       currentUserId: user.id,
@@ -544,6 +544,9 @@ export class SupabaseLeagueService {
         costRound: row.cost_round,
         forfeitedDraftPickId: row.forfeited_draft_pick_id,
         sourceDraftSelectionId: row.source_draft_selection_id,
+        sourceType: row.keeper_source_type,
+        sourceWaiverTransactionId: row.source_waiver_transaction_id,
+        sourceAcquiredAt: row.source_acquired_at,
       })),
       draftPicks: picks.map((row) => ({
         id: row.id,
