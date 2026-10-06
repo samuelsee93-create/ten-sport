@@ -8,6 +8,30 @@ export const pointsForTeam=(s,id)=>s.teamPointsById?.[id]??rosterForTeam(s,id).r
 export const ownedDraftPicks=(s,id)=>s.draftPicks.filter(p=>p.currentTeamId===id);
 export const keeperIdsForTeam=(s,id)=>s.keeperSelections.filter(k=>k.teamId===id).map(k=>k.assetId);
 export function tradeItemsForSide(s,trade,side){return trade.items.filter(i=>i.side===side).map(i=>{if(i.type==='ASSET')return{...i,label:assetById(s,i.assetId)?.name??'Unknown asset'};const p=s.draftPicks.find(x=>x.id===i.draftPickId);const o=p?teamById(s,p.originalTeamId):null;return{...i,label:p?`${p.season} Round ${p.round} · Originally ${o?.managerName??o?.name??'Unknown'}`:'Unknown draft pick'};});}
-export function draftOrder(s){const rows=[];for(let round=1;round<=s.draft.rounds;round+=1){const ordered=round%2===0?[...s.teams].reverse():s.teams;ordered.forEach((team,index)=>{const pick=s.draftPicks.find(p=>p.round===round&&p.originalTeamId===team.id);rows.push({overall:rows.length+1,round,slot:index+1,originalTeamId:team.id,currentTeamId:pick?.currentTeamId??team.id,draftPickId:pick?.id??null});});}return rows;}
+export function draftOrder(s){
+  if(!s.draft)return[];
+  const configured=(s.draft.order??[])
+    .slice()
+    .sort((a,b)=>a.slot-b.slot)
+    .map(row=>teamById(s,row.teamId))
+    .filter(Boolean);
+  const base=configured.length===s.teams.length?configured:s.teams;
+  const rows=[];
+  for(let round=1;round<=s.draft.rounds;round+=1){
+    const ordered=round%2===0?[...base].reverse():base;
+    ordered.forEach((team,index)=>{
+      const pick=s.draftPicks.find(p=>p.round===round&&p.originalTeamId===team.id);
+      rows.push({
+        overall:rows.length+1,
+        round,
+        slot:index+1,
+        originalTeamId:team.id,
+        currentTeamId:pick?.currentTeamId??team.id,
+        draftPickId:pick?.id??null
+      });
+    });
+  }
+  return rows;
+}
 export const activeSlotCount=(s,id)=>activeRosterForTeam(s,id).length;
 export const canActivate=(s,id)=>activeSlotCount(s,id)<ACTIVE_SLOTS;
