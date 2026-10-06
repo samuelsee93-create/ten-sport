@@ -126,16 +126,41 @@ Tournament wins:
 
 National Champion bonus: **+300**
 
-## Six Nations
+## Super League Rugby
 
 Maximum: **1,000**
 
-- Match wins: **500** (100 per win)
-- Final table: **up to 300**
-- Tournament champion: **+100**
-- Grand Slam: **+100**
+- Regular-season wins: **250**
+- Regular-season placement: **150**
+- Playoff wins: **200**
+- Playoff advancement: **150**
+- Grand Final championship: **250**
 
-A 5–0 champion with a Grand Slam reaches 1,000. A 4–1 champion cannot.
+Regular-season wins:
+- Elite benchmark: **22 wins**
+- Formula: `250 × wins / 22`, capped at 250.
+
+Regular-season placement:
+- Only the top half of the 14-team league scores.
+- 1st = 150.
+- 7th = 10.
+- Positions 1–7 use the same linear top-half placement formula as the other team sports.
+- 8th–14th = 0.
+
+Playoff wins:
+- **100 points per playoff win**, capped at 200.
+- This avoids rewarding lower seeds simply for having an extra Eliminator match.
+
+Playoff advancement:
+- Qualify for the top-six playoffs: **+25**
+- Reach the semifinals: **+35** (the 1st/2nd-place bye counts)
+- Reach the Grand Final: **+40**
+- Win the Grand Final: **+50**
+- Maximum advancement: **150**
+
+The championship bonus is a separate **+250**.
+
+A dominant 1st-place champion can reach the full 1,000, while a lower-seeded champion can still score heavily without receiving an artificial bonus for playing an extra playoff game.
 
 ## Historical import rule
 
@@ -187,17 +212,6 @@ MLB:
 - Division Series advancement: 35
 - League Championship Series advancement: 40
 - World Series win: 50
-
-### Six Nations final table — 300 max
-
-- 1st: 300
-- 2nd: 240
-- 3rd: 180
-- 4th: 120
-- 5th: 60
-- 6th: 0
-
-This remains separate from the +100 tournament champion bonus and +100 Grand Slam bonus.
 
 ### UCL knockout match wins — 250 max
 
