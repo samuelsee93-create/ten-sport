@@ -1,5 +1,8 @@
 import { LocalLeagueService } from './localLeagueService.js';
+import { SupabaseLeagueService } from './supabaseLeagueService.js';
+import { supabaseConfigured } from './supabaseClient.js';
 
-// The UI imports this interface, not localStorage directly. A future hosted
-// implementation can replace LocalLeagueService while keeping the same calls.
-export const leagueService = new LocalLeagueService();
+export const hostedBackendEnabled = supabaseConfigured;
+export const leagueService = hostedBackendEnabled
+  ? new SupabaseLeagueService()
+  : new LocalLeagueService();
