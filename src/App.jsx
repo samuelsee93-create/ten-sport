@@ -319,7 +319,7 @@ function Dashboard({ state, teamId, onOpenTeam }) {
           <div><span>Active</span><b>{team ? activeRosterForTeam(state, team.id).length : 0}/15</b></div>
         </div>
         <div className="callout">
-          Every team has 10 dedicated sport slots plus 10 flex slots. Active/Bench remains separate: 15 score and 5 sit each scoring lock.
+          Every 20-asset roster must contain at least one asset from each of the 10 sports. There are no dedicated or flex roster positions. Active/Bench remains separate: 15 score and 5 sit each scoring lock.
         </div>
       </Card>
       <Card title="Recent League Activity" icon={CalendarDays}>
@@ -336,7 +336,7 @@ function Dashboard({ state, teamId, onOpenTeam }) {
       </Card>
       <Card title="League Architecture" icon={Database}>
         <ul className="checklist">
-          <li>20 assets · 10 sport slots + 10 flex</li>
+          <li>20 assets · all 10 sports must be represented</li>
           <li>15 Active · 5 Bench</li>
           <li>3 free keepers</li>
           <li>Asset + draft-pick trades</li>
@@ -348,35 +348,28 @@ function Dashboard({ state, teamId, onOpenTeam }) {
   );
 }
 
-function RosterStructure({ state, teamId }) {
+function SportCoverage({ state, teamId }) {
   const roster = rosterForTeam(state, teamId);
-  const dedicatedBySport = Object.fromEntries(
-    roster
-      .filter((row) => row.rosterSlotType === 'SPORT' && row.rosterSlotSport)
-      .map((row) => [row.rosterSlotSport, row])
+  const counts = Object.fromEntries(
+    SPORTS.map((sport) => [sport, roster.filter((row) => row.asset?.sport === sport).length])
   );
-  const flex = roster.filter((row) => row.rosterSlotType !== 'SPORT');
+  const represented = SPORTS.filter((sport) => counts[sport] > 0).length;
 
   return (
-    <div className="slot-grid">
-      {SPORTS.map((sport) => {
-        const row = dedicatedBySport[sport];
-        return (
-          <div className={`roster-slot ${row ? 'filled' : 'empty'}`} key={sport}>
+    <div>
+      <div className="coverage-summary">
+        <b>{represented}/10 sports represented</b>
+        <span className="muted">20 total roster spots · no dedicated or flex positions</span>
+      </div>
+      <div className="sport-coverage-grid">
+        {SPORTS.map((sport) => (
+          <div className={`sport-coverage ${counts[sport] > 0 ? 'covered' : 'missing'}`} key={sport}>
             <span>{sport}</span>
-            <b>{row?.asset?.name ?? 'Open dedicated slot'}</b>
+            <b>{counts[sport]}</b>
+            <small>{counts[sport] > 0 ? 'Represented' : 'Required'}</small>
           </div>
-        );
-      })}
-      {Array.from({ length: 10 }).map((_, index) => {
-        const row = flex[index];
-        return (
-          <div className={`roster-slot flex ${row ? 'filled' : 'empty'}`} key={`flex-${index}`}>
-            <span>FLEX {index + 1}</span>
-            <b>{row?.asset?.name ?? 'Open flex slot'}</b>
-          </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
@@ -401,10 +394,7 @@ function MyTeam({ state, teamId, setError }) {
     <div className="asset-row" key={membership.assetId}>
       <div>
         <div className="asset-name">{membership.asset.name} <Badge>{membership.asset.sport}</Badge></div>
-        <small>
-          {membership.rosterSlotType === 'SPORT' ? `Dedicated ${membership.rosterSlotSport}` : 'Flex'} ·
-          {' '}Season {membership.asset.seasonPoints} · For You {membership.asset.pointsForTeam}
-        </small>
+        <small>{membership.asset.sport} · Season {membership.asset.seasonPoints} · For You {membership.asset.pointsForTeam}</small>
       </div>
       <Button
         kind={status === LINEUP_STATUS.ACTIVE ? 'ghost' : 'primary'}
@@ -443,8 +433,8 @@ function MyTeam({ state, teamId, setError }) {
           </div>
         </div>
       </Card>
-      <Card title="Roster Structure · 10 Sport + 10 Flex" icon={List}>
-        <RosterStructure state={state} teamId={teamId} />
+      <Card title="Sport Coverage" icon={List}>
+        <SportCoverage state={state} teamId={teamId} />
       </Card>
       <div className="grid two">
         <Card title={`Active · ${active.length}/15`} icon={Activity}>
@@ -496,8 +486,8 @@ function TeamDetail({ state, teamId, onBack }) {
           ))}
         </div>
       </Card>
-      <Card title="Roster Slots" icon={List}>
-        <RosterStructure state={state} teamId={teamId} />
+      <Card title="Sport Coverage" icon={List}>
+        <SportCoverage state={state} teamId={teamId} />
       </Card>
       <Card
         title="Roster Performance"
@@ -513,7 +503,7 @@ function TeamDetail({ state, teamId, onBack }) {
           <table className="asset-table">
             <thead>
               <tr>
-                <th>Asset</th><th>Sport</th><th>Roster Slot</th><th>This Season</th><th>Previous Season</th><th>Lineup</th>
+                <th>Asset</th><th>Sport</th><th>This Season</th><th>Previous Season</th><th>Lineup</th>
               </tr>
             </thead>
             <tbody>
@@ -521,7 +511,6 @@ function TeamDetail({ state, teamId, onBack }) {
                 <tr key={row.assetId}>
                   <td><b>{row.asset.name}</b></td>
                   <td><Badge>{row.asset.sport}</Badge></td>
-                  <td>{row.rosterSlotType === 'SPORT' ? `Dedicated ${row.rosterSlotSport}` : 'Flex'}</td>
                   <td className="numeric">{row.currentPoints.toLocaleString()}</td>
                   <td className="numeric">{row.previous ? row.previous.points.toLocaleString() : '—'}</td>
                   <td><Badge tone={row.lineupStatus === 'ACTIVE' ? 'good' : 'neutral'}>{row.lineupStatus}</Badge></td>
@@ -767,21 +756,58 @@ function Leagues({ state, setPage }) {
 }
 
 function Keepers({ state, teamId, setError }) {
-  const roster = rosterForTeam(state, teamId);
-  const keepers = keeperIdsForTeam(state, teamId);
+  const keepers = state.keeperSelections.filter((row) => row.teamId === teamId);
+  const eligible = (state.keeperEligibleRoster ?? [])
+    .filter((row) => row.teamId === teamId)
+    .map((row) => ({ ...row, asset: state.assets.find((asset) => asset.id === row.assetId) }))
+    .filter((row) => row.asset);
+
   return (
-    <Card title={`Keeper Centre · ${keepers.length}/3`} icon={Crown} action={<Badge tone="warn">Deadline {formatDate(state.league.keeperDeadline)}</Badge>}>
-      <p className="muted">Keep exactly three assets. Keepers cost no draft picks.</p>
-      <div className="keeper-grid">
-        {roster.map((membership) => {
-          const selected = keepers.includes(membership.assetId);
-          return (
-            <button key={membership.assetId} className={`keeper ${selected ? 'selected' : ''}`} onClick={() => run(() => leagueService.toggleKeeper(teamId, membership.assetId), setError)}>
-              <div><b>{membership.asset.name}</b><small>{membership.asset.sport} · {membership.asset.seasonPoints} season pts</small></div>
-              {selected ? <Crown size={18} /> : <span>Choose</span>}
-            </button>
-          );
-        })}
+    <Card
+      title={`Keeper Centre · ${keepers.length}/3`}
+      icon={Crown}
+      action={<Badge tone="warn">Deadline {formatDate(state.league.keeperDeadline)}</Badge>}
+    >
+      <p className="muted">
+        Keep 0–3 assets. Each keeper costs one round earlier than its original draft round for every year kept, for a maximum of three keeper years.
+      </p>
+      {!state.keeperSourceSeason ? (
+        <div className="empty-state">
+          <b>Inaugural season</b>
+          <span>There are no keeper-eligible assets until this league completes its first season.</span>
+        </div>
+      ) : eligible.length === 0 ? (
+        <div className="empty-state">
+          <b>No keeper-eligible assets</b>
+          <span>Only assets from your final {state.keeperSourceSeason.label} roster that remain draftable can be kept.</span>
+        </div>
+      ) : (
+        <div className="keeper-grid">
+          {eligible.map((membership) => {
+            const keeper = keepers.find((row) => row.assetId === membership.assetId);
+            return (
+              <button
+                key={membership.assetId}
+                className={`keeper ${keeper ? 'selected' : ''}`}
+                onClick={() => run(() => leagueService.toggleKeeper(teamId, membership.assetId), setError)}
+              >
+                <div>
+                  <b>{membership.asset.name}</b>
+                  <small>
+                    {membership.asset.sport}
+                    {keeper
+                      ? ` · Year ${keeper.keeperYear} · Costs Round ${keeper.costRound}`
+                      : ' · Select to calculate keeper cost'}
+                  </small>
+                </div>
+                {keeper ? <Crown size={18} /> : <span>Choose</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <div className="callout">
+        Keeper age follows the asset through trades. If an asset returns to the draft and is selected again, its keeper clock resets from the new draft round.
       </div>
     </Card>
   );
@@ -809,7 +835,7 @@ function Draft({ state, teamId, setError }) {
           </div>
           <div className="timer">{state.draft.pickTimerSeconds}s</div>
         </div>
-        <p className="muted">Draft date: {formatDate(state.draft.scheduledAt)} · Rosters must finish with one dedicated asset from every sport.</p>
+        <p className="muted">Draft date: {formatDate(state.draft.scheduledAt)} · 20-round snake draft · finished rosters must represent all 10 sports.</p>
         {state.draft.status === DRAFT_STATUS.LIVE && currentTeam?.id === teamId && (
           <div className="draft-pool">
             {unowned.slice(0, 10).map((asset) => (
@@ -825,7 +851,7 @@ function Draft({ state, teamId, setError }) {
         {state.draft.selections.length
           ? state.draft.selections.slice(-8).reverse().map((selection) => (
               <div className="selection" key={selection.id}>
-                <b>#{selection.overallPick}</b><span>{state.assets.find((asset) => asset.id === selection.assetId)?.name}</span><small>{teamById(state, selection.teamId)?.name}</small>
+                <b>#{selection.overallPick}</b><span>{state.assets.find((asset) => asset.id === selection.assetId)?.name}</span><small>{teamById(state, selection.teamId)?.name}{selection.selectionType === 'KEEPER' ? ' · KEEPER' : ''}</small>
               </div>
             ))
           : <p className="muted">No picks have been made yet.</p>}
@@ -843,6 +869,10 @@ function Commissioner({ state, teamId, setError }) {
     themeMode: state.league.themeMode ?? 'dark',
   });
   const [draftDate, setDraftDate] = useState(toLocalDateTimeInput(state.draft?.scheduledAt));
+  const [draftOrderIds, setDraftOrderIds] = useState(() => {
+    const configured = (state.draft?.order ?? []).slice().sort((a, b) => a.slot - b.slot).map((row) => row.teamId);
+    return configured.length === state.teams.length ? configured : state.teams.map((team) => team.id);
+  });
 
   useEffect(() => {
     setAppearance({
@@ -857,6 +887,21 @@ function Commissioner({ state, teamId, setError }) {
   useEffect(() => {
     setDraftDate(toLocalDateTimeInput(state.draft?.scheduledAt));
   }, [state.draft?.id, state.draft?.scheduledAt]);
+
+  useEffect(() => {
+    const configured = (state.draft?.order ?? []).slice().sort((a, b) => a.slot - b.slot).map((row) => row.teamId);
+    setDraftOrderIds(configured.length === state.teams.length ? configured : state.teams.map((team) => team.id));
+  }, [state.draft?.id, state.draft?.orderMethod, state.teams.length]);
+
+  const moveDraftTeam = (index, delta) => {
+    setDraftOrderIds((current) => {
+      const next = [...current];
+      const target = index + delta;
+      if (target < 0 || target >= next.length) return current;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
 
   const setAppearanceField = (field, value) => setAppearance((current) => ({ ...current, [field]: value }));
 
@@ -894,6 +939,49 @@ function Commissioner({ state, teamId, setError }) {
             </div>
           </div>
         ) : <p className="muted">No draft is configured yet.</p>}
+      </Card>
+
+      <Card title="Draft Order · Snake" icon={DraftingCompass}>
+        {!state.draft ? (
+          <p className="muted">No draft is configured yet.</p>
+        ) : (
+          <div className="stack tight">
+            <p className="muted">
+              Set the first-round order manually or randomize it. Even-numbered rounds automatically reverse this order.
+            </p>
+            <div className="draft-order-list">
+              {draftOrderIds.map((id, index) => {
+                const team = teamById(state, id);
+                return (
+                  <div className="draft-order-row" key={id}>
+                    <strong>{index + 1}</strong>
+                    <div><b>{team?.name ?? 'Unknown team'}</b><small>{team?.managerName}</small></div>
+                    <div className="draft-order-actions">
+                      <button disabled={index === 0 || state.draft.status === DRAFT_STATUS.LIVE} onClick={() => moveDraftTeam(index, -1)}>↑</button>
+                      <button disabled={index === draftOrderIds.length - 1 || state.draft.status === DRAFT_STATUS.LIVE} onClick={() => moveDraftTeam(index, 1)}>↓</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="inline">
+              <Button
+                disabled={state.draft.status === DRAFT_STATUS.LIVE}
+                onClick={() => run(() => leagueService.setDraftOrder(draftOrderIds), setError)}
+              >
+                Save Draft Order
+              </Button>
+              <Button
+                kind="ghost"
+                disabled={state.draft.status === DRAFT_STATUS.LIVE}
+                onClick={() => run(() => leagueService.randomizeDraftOrder(), setError)}
+              >
+                Randomize Order
+              </Button>
+            </div>
+            <div className="detail"><span>Order method</span><b>{state.draft.orderMethod ?? 'Not set'}</b></div>
+          </div>
+        )}
       </Card>
 
       <Card title="League Access" icon={Layers3}>
@@ -1025,7 +1113,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.6 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.7 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>
