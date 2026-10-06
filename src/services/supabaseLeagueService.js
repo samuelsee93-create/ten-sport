@@ -27,6 +27,76 @@ function sumBy(rows, key, value) {
 }
 
 export class SupabaseLeagueService {
+  constructor() {
+    this.listeners = new Set();
+    this.state = null;
+    this.unsubscribeRealtime = null;
+    this.refreshQueued = false;
+  }
+
+  getState() {
+    return this.state == null ? null : structuredClone(this.state);
+  }
+
+  subscribe(fn) {
+    this.listeners.add(fn);
+    return () => this.listeners.delete(fn);
+  }
+
+  emit() {
+    const snapshot = this.getState();
+    this.listeners.forEach((fn) => fn(snapshot));
+  }
+
+  requireState() {
+    if (!this.state) throw new Error('Hosted league state has not been loaded yet.');
+    return this.state;
+  }
+
+  async initialize() {
+    const state = await this.refresh();
+    this.startRealtime();
+    return state;
+  }
+
+  async refresh() {
+    const next = await this.loadLeagueState();
+    this.state = next;
+    this.emit();
+    return this.getState();
+  }
+
+  queueRefresh() {
+    if (this.refreshQueued) return;
+    this.refreshQueued = true;
+    setTimeout(async () => {
+      try {
+        await this.refresh();
+      } finally {
+        this.refreshQueued = false;
+      }
+    }, 75);
+  }
+
+  startRealtime() {
+    if (!this.state) return;
+    this.unsubscribeRealtime?.();
+    this.unsubscribeRealtime = this.subscribeToLeagueState(
+      {
+        leagueId: this.state.league.id,
+        seasonId: this.state.league.seasonId,
+        draftId: this.state.draft?.id ?? null,
+      },
+      () => this.queueRefresh()
+    );
+  }
+
+  dispose() {
+    this.unsubscribeRealtime?.();
+    this.unsubscribeRealtime = null;
+    this.listeners.clear();
+  }
+
   async getCurrentContext() {
     const c = client();
     const {
@@ -320,6 +390,7 @@ export class SupabaseLeagueService {
   async renameTeam(teamId, name) {
     const { error } = await client().rpc('rename_team', { p_team_id: teamId, p_name: name });
     if (error) throw error;
+    return this.refresh();
   }
 
   async setTeamLogoUrl(teamId, logoUrl) {
@@ -328,52 +399,65 @@ export class SupabaseLeagueService {
       p_logo_url: logoUrl,
     });
     if (error) throw error;
+    return this.refresh();
   }
 
-  async setLineupStatus(seasonId, teamId, assetId, status) {
+  async setLineupStatus(teamId, assetId, status) {
+    const state = this.requireState();
     const { error } = await client().rpc('set_lineup_status', {
-      p_season_id: seasonId,
+      p_season_id: state.league.seasonId,
       p_team_id: teamId,
       p_asset_id: assetId,
       p_status: status,
     });
     if (error) throw error;
+    return this.refresh();
   }
 
-  async toggleKeeper(seasonId, teamId, assetId) {
+  async toggleKeeper(teamId, assetId) {
+    const state = this.requireState();
     const { data, error } = await client().rpc('toggle_keeper', {
-      p_season_id: seasonId,
+      p_season_id: state.league.seasonId,
       p_team_id: teamId,
       p_asset_id: assetId,
     });
     if (error) throw error;
+    await this.refresh();
     return data;
   }
 
   async acceptTrade(tradeId) {
     const { error } = await client().rpc('accept_trade', { p_trade_id: tradeId });
     if (error) throw error;
+    return this.refresh();
   }
 
   async declineTrade(tradeId) {
     const { error } = await client().rpc('decline_trade', { p_trade_id: tradeId });
     if (error) throw error;
+    return this.refresh();
   }
 
-  async setDraftStatus(draftId, status) {
+  async setDraftStatus(status) {
+    const state = this.requireState();
+    if (!state.draft?.id) throw new Error('No draft is configured for this season.');
     const { error } = await client().rpc('set_draft_status', {
-      p_draft_id: draftId,
+      p_draft_id: state.draft.id,
       p_status: status,
     });
     if (error) throw error;
+    return this.refresh();
   }
 
-  async makeDraftPick(draftId, assetId) {
+  async makeDraftPick(assetId) {
+    const state = this.requireState();
+    if (!state.draft?.id) throw new Error('No draft is configured for this season.');
     const { data, error } = await client().rpc('make_draft_pick', {
-      p_draft_id: draftId,
+      p_draft_id: state.draft.id,
       p_asset_id: assetId,
     });
     if (error) throw error;
+    await this.refresh();
     return data;
   }
 
