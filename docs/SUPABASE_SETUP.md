@@ -7,13 +7,16 @@ Apply in order:
 1. `db/migrations/001_initial.sql`
 2. `db/migrations/002_transactions.sql`
 3. `db/migrations/003_account_and_manager_actions.sql`
+4. `db/migrations/004_backend_hardening.sql`
 
 ## Frontend environment
 Copy `.env.example` to `.env.local` and provide:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-Never commit a service-role key to the frontend repository.
+Never commit a secret/service-role key to the frontend repository. The browser uses a publishable key and relies on Auth + RLS for user-level authorization.
+
+When both variables are present, `src/services/service.js` automatically switches from the local demo service to the hosted Supabase service.
 
 ## Security model
 - Browser reads are restricted by Row Level Security.
@@ -31,5 +34,8 @@ Realtime publication is enabled for:
 
 The live draft client can subscribe through `SupabaseLeagueService.subscribeToDraft()`.
 
+## Hosted state loader
+`SupabaseLeagueService.loadLeagueState()` hydrates the existing UI/domain view model from Postgres, including manager identity, rosters, keepers, trades, draft capital, draft selections, scoring totals, lock state and audit activity. Realtime changes trigger a state refresh for the active league/season.
+
 ## Next implementation step
-Provision the Supabase project, apply migrations, configure auth, then replace the local demo snapshot loader with queries that hydrate the same UI/domain view model from Postgres.
+Provision or connect the Supabase project, apply all four migrations, configure Auth, then run the live app against the project and address any project-specific advisor findings.
