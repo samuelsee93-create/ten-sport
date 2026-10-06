@@ -1113,7 +1113,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.8 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.9 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>
