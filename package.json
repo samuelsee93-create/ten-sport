@@ -1,7 +1,7 @@
 {
   "name": "ten-sport",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -14,7 +14,7 @@
     "react": "latest",
     "react-dom": "latest",
     "vite": "latest",
-    "@supabase/supabase-js": "latest"
+    "@supabase/supabase-js": "2.117.1"
   },
   "devDependencies": {}
 }
