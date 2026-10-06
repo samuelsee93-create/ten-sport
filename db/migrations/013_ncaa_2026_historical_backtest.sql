@@ -1,0 +1,166 @@
+-- 013_ncaa_2026_historical_backtest.sql
+insert into public.assets(sport,external_key,name,asset_type,active)
+values
+('NCAA','duke','Duke','TEAM',false),
+('NCAA','siena','Siena','TEAM',false),
+('NCAA','ohio-state','Ohio State','TEAM',false),
+('NCAA','tcu','TCU','TEAM',false),
+('NCAA','st-john-s','St. John''s','TEAM',false),
+('NCAA','northern-iowa','Northern Iowa','TEAM',false),
+('NCAA','kansas','Kansas','TEAM',false),
+('NCAA','california-baptist','California Baptist','TEAM',false),
+('NCAA','louisville','Louisville','TEAM',false),
+('NCAA','south-florida','South Florida','TEAM',false),
+('NCAA','michigan-state','Michigan State','TEAM',false),
+('NCAA','north-dakota-state','North Dakota State','TEAM',false),
+('NCAA','ucla','UCLA','TEAM',false),
+('NCAA','ucf','UCF','TEAM',false),
+('NCAA','uconn','UConn','TEAM',false),
+('NCAA','furman','Furman','TEAM',false),
+('NCAA','arizona','Arizona','TEAM',false),
+('NCAA','liu','LIU','TEAM',false),
+('NCAA','villanova','Villanova','TEAM',false),
+('NCAA','utah-state','Utah State','TEAM',false),
+('NCAA','wisconsin','Wisconsin','TEAM',false),
+('NCAA','high-point','High Point','TEAM',false),
+('NCAA','arkansas','Arkansas','TEAM',false),
+('NCAA','hawaii','Hawaii','TEAM',false),
+('NCAA','byu','BYU','TEAM',false),
+('NCAA','texas','Texas','TEAM',false),
+('NCAA','gonzaga','Gonzaga','TEAM',false),
+('NCAA','kennesaw-state','Kennesaw State','TEAM',false),
+('NCAA','miami-fl','Miami (FL)','TEAM',false),
+('NCAA','missouri','Missouri','TEAM',false),
+('NCAA','purdue','Purdue','TEAM',false),
+('NCAA','queens-n-c','Queens (N.C.)','TEAM',false),
+('NCAA','florida','Florida','TEAM',false),
+('NCAA','prairie-view-a-m','Prairie View A&M','TEAM',false),
+('NCAA','clemson','Clemson','TEAM',false),
+('NCAA','iowa','Iowa','TEAM',false),
+('NCAA','vanderbilt','Vanderbilt','TEAM',false),
+('NCAA','mcneese','McNeese','TEAM',false),
+('NCAA','nebraska','Nebraska','TEAM',false),
+('NCAA','troy','Troy','TEAM',false),
+('NCAA','north-carolina','North Carolina','TEAM',false),
+('NCAA','vcu','VCU','TEAM',false),
+('NCAA','illinois','Illinois','TEAM',false),
+('NCAA','penn','Penn','TEAM',false),
+('NCAA','saint-mary-s','Saint Mary''s','TEAM',false),
+('NCAA','texas-a-m','Texas A&M','TEAM',false),
+('NCAA','houston','Houston','TEAM',false),
+('NCAA','idaho','Idaho','TEAM',false),
+('NCAA','michigan','Michigan','TEAM',false),
+('NCAA','howard','Howard','TEAM',false),
+('NCAA','georgia','Georgia','TEAM',false),
+('NCAA','saint-louis','Saint Louis','TEAM',false),
+('NCAA','texas-tech','Texas Tech','TEAM',false),
+('NCAA','akron','Akron','TEAM',false),
+('NCAA','alabama','Alabama','TEAM',false),
+('NCAA','hofstra','Hofstra','TEAM',false),
+('NCAA','tennessee','Tennessee','TEAM',false),
+('NCAA','miami-ohio','Miami (Ohio)','TEAM',false),
+('NCAA','virginia','Virginia','TEAM',false),
+('NCAA','wright-state','Wright State','TEAM',false),
+('NCAA','kentucky','Kentucky','TEAM',false),
+('NCAA','santa-clara','Santa Clara','TEAM',false),
+('NCAA','iowa-state','Iowa State','TEAM',false),
+('NCAA','tennessee-state','Tennessee State','TEAM',false),
+('NCAA','umbc','UMBC','TEAM',false),
+('NCAA','nc-state','NC State','TEAM',false),
+('NCAA','lehigh','Lehigh','TEAM',false),
+('NCAA','smu','SMU','TEAM',false)
+on conflict (sport,external_key) do update set name=excluded.name,asset_type='TEAM';
+
+insert into public.competition_editions(sport,label,status,source_ref,starts_on,ends_on)
+values('NCAA','2026','COMPLETE','https://www.ncaa.com/march-madness-live/bracket','2026-03-17','2026-04-06')
+on conflict (sport,label) do update set status='COMPLETE',source_ref=excluded.source_ref,starts_on=excluded.starts_on,ends_on=excluded.ends_on;
+
+insert into public.competition_entries(edition_id,asset_id,draftable,entry_status,source_ref)
+select e.id,a.id,false,'HISTORICAL',e.source_ref
+from public.competition_editions e join public.assets a on a.sport='NCAA'
+where e.sport='NCAA' and e.label='2026'
+and a.external_key in ('duke','siena','ohio-state','tcu','st-john-s','northern-iowa','kansas','california-baptist','louisville','south-florida','michigan-state','north-dakota-state','ucla','ucf','uconn','furman','arizona','liu','villanova','utah-state','wisconsin','high-point','arkansas','hawaii','byu','texas','gonzaga','kennesaw-state','miami-fl','missouri','purdue','queens-n-c','florida','prairie-view-a-m','clemson','iowa','vanderbilt','mcneese','nebraska','troy','north-carolina','vcu','illinois','penn','saint-mary-s','texas-a-m','houston','idaho','michigan','howard','georgia','saint-louis','texas-tech','akron','alabama','hofstra','tennessee','miami-ohio','virginia','wright-state','kentucky','santa-clara','iowa-state','tennessee-state','umbc','nc-state','lehigh','smu')
+on conflict (edition_id,asset_id) do update set draftable=false,entry_status='HISTORICAL',source_ref=excluded.source_ref;
+
+insert into public.asset_season_stats(asset_id,season_label,scoring_version,points,rank,source_ref,breakdown)
+values
+((select id from public.assets where sport='NCAA' and external_key='duke'),'2026','v1.2',225,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',3,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='siena'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='ohio-state'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='tcu'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='st-john-s'),'2026','v1.2',125,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',2,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='northern-iowa'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='kansas'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='california-baptist'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='louisville'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='south-florida'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='michigan-state'),'2026','v1.2',125,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',2,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='north-dakota-state'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='ucla'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='ucf'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='uconn'),'2026','v1.2',500,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',5,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='furman'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='arizona'),'2026','v1.2',350,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',4,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='liu'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='villanova'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='utah-state'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='wisconsin'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='high-point'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='arkansas'),'2026','v1.2',125,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',2,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='hawaii'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='byu'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='texas'),'2026','v1.2',125,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',2,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='gonzaga'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='kennesaw-state'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='miami-fl'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='missouri'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='purdue'),'2026','v1.2',225,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',3,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='queens-n-c'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='florida'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='prairie-view-a-m'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='clemson'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='iowa'),'2026','v1.2',225,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',3,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='vanderbilt'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='mcneese'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='nebraska'),'2026','v1.2',125,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',2,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='troy'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='north-carolina'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='vcu'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='illinois'),'2026','v1.2',350,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',4,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='penn'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='saint-mary-s'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='texas-a-m'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='houston'),'2026','v1.2',125,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',2,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='idaho'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='michigan'),'2026','v1.2',1000,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',6,'champion',true)),
+((select id from public.assets where sport='NCAA' and external_key='howard'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='georgia'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='saint-louis'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='texas-tech'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='akron'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='alabama'),'2026','v1.2',125,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',2,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='hofstra'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='tennessee'),'2026','v1.2',225,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',3,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='miami-ohio'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='virginia'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='wright-state'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='kentucky'),'2026','v1.2',50,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',1,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='santa-clara'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='iowa-state'),'2026','v1.2',125,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',2,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='tennessee-state'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='umbc'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='nc-state'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='lehigh'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false)),
+((select id from public.assets where sport='NCAA' and external_key='smu'),'2026','v1.2',0,null,'https://www.ncaa.com/march-madness-live/bracket',jsonb_build_object('tournament_wins',0,'champion',false))
+on conflict (asset_id,season_label,scoring_version) do update
+set points=excluded.points,source_ref=excluded.source_ref,breakdown=excluded.breakdown,updated_at=now();
+
+with ranked as (
+  select ass.id as stat_id,rank() over(order by ass.points desc)::int as calculated_rank
+  from public.asset_season_stats ass
+  join public.assets a on a.id=ass.asset_id
+  where a.sport='NCAA' and ass.season_label='2026' and ass.scoring_version='v1.2'
+)
+update public.asset_season_stats ass
+set rank=ranked.calculated_rank,updated_at=now()
+from ranked where ranked.stat_id=ass.id;
