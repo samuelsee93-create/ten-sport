@@ -132,7 +132,28 @@ export class SupabaseLeagueService {
       if (leagueId) membership = { league_id: leagueId, role: 'COMMISSIONER', status: 'ACTIVE' };
     }
 
-    if (!leagueId) throw new Error('No active Ten Sport league is available for this account.');
+    if (!leagueId) {
+      const { error: bootstrapError } = await c.rpc('bootstrap_first_league');
+      if (!bootstrapError) {
+        const refreshedMemberships = unwrap(
+          await c
+            .from('league_memberships')
+            .select('league_id,role,status')
+            .eq('user_id', user.id)
+            .eq('status', 'ACTIVE')
+            .limit(1),
+          'Reload league membership'
+        );
+        membership = refreshedMemberships?.[0] ?? null;
+        leagueId = membership?.league_id ?? null;
+      } else if (!bootstrapError.message?.includes('League already exists')) {
+        throw bootstrapError;
+      }
+    }
+
+    if (!leagueId) {
+      throw new Error('Your account is not assigned to an active Ten Sport league yet.');
+    }
 
     const [profileResult, leagueResult, teamResult] = await Promise.all([
       c.from('profiles').select('id,display_name,avatar_url').eq('id', user.id).maybeSingle(),
