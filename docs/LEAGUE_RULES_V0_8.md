@@ -12,10 +12,10 @@ The ten sports are:
 6. MLB
 7. UCL
 8. NCAA men's basketball
-9. Super League Rugby
+9. Super Rugby Pacific
 10. Tennis
 
-Six Nations is no longer part of Ten Sport.
+Six Nations and Super League Rugby are no longer part of Ten Sport.
 
 ## Roster
 
