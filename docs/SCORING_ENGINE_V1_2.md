@@ -140,3 +140,87 @@ A 5–0 champion with a Grand Slam reaches 1,000. A 4–1 champion cannot.
 ## Historical import rule
 
 Do **not** derive historical points from the current workbook's normalized-placement scoring. Use this v1.2 specification and the underlying real-world results. If a sub-formula is not numerically specified in the finalized conversation, stop and resolve that sub-formula before writing historical scores into production.
+
+
+## Finalized v1.2 sub-formulas
+
+These formulas were green-lit after the initial v1.2 specification and are authoritative for historical back-testing.
+
+### NHL / NFL / NBA / MLB regular-season placement — 150 max
+
+Only the top half scores placement points.
+
+Use a linear scale:
+- 1st place = 150
+- final scoring position in the top half = 10
+- bottom half = 0
+
+For a league with N scoring positions in the top half:
+
+`placement_points = 150 - (finish - 1) × (140 / (N - 1))`
+
+Cap at 150 and floor non-scoring positions at 0.
+
+### Playoff-win buckets — 200 max
+
+- NHL: 12.5 per playoff game win, 16 wins = 200.
+- NBA: 12.5 per playoff game win, 16 wins = 200.
+- NFL: 50 per playoff game win, capped at 200.
+- MLB: 200 / 13 points per playoff game win, capped at 200.
+
+### Playoff advancement — 150 max
+
+NHL / NBA:
+- First round won: 25
+- Second round won: 35
+- Conference final won: 40
+- Final won: 50
+
+NFL:
+- Wild Card round advancement or a first-round bye: 25
+- Divisional advancement: 35
+- Conference championship advancement: 40
+- Super Bowl win: 50
+
+MLB:
+- Wild Card advancement or first-round bye: 25
+- Division Series advancement: 35
+- League Championship Series advancement: 40
+- World Series win: 50
+
+### Six Nations final table — 300 max
+
+- 1st: 300
+- 2nd: 240
+- 3rd: 180
+- 4th: 120
+- 5th: 60
+- 6th: 0
+
+This remains separate from the +100 tournament champion bonus and +100 Grand Slam bonus.
+
+### UCL knockout match wins — 250 max
+
+Each knockout match win is worth `250 / 7` points (35.7142857...), capped at 250.
+
+### F1 WDC placement — 150 max
+
+- P1: 150
+- P2: 127.5
+- P3: 108.75
+- P4: 90
+- P5: 75
+- P6: 60
+- P7: 45
+- P8: 33.75
+- P9: 22.5
+- P10: 15
+- P11+: 0
+
+World Champion bonus remains +50.
+
+### F1 Race/Sprint performance — 800 max
+
+`race_performance = 800 × actual FIA championship points / theoretical maximum points available to one driver in that season`
+
+Cap at 800.
