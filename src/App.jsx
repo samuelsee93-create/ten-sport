@@ -1,0 +1,54 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Activity, ArrowRightLeft, CalendarDays, Crown, Database, DraftingCompass, Gauge, RotateCcw, ShieldCheck, Trophy, Users } from 'lucide-react';
+import { leagueService } from './services/service.js';
+import { LINEUP_STATUS, DRAFT_STATUS } from './domain/constants.js';
+import { activeRosterForTeam, benchRosterForTeam, draftOrder, keeperIdsForTeam, ownedDraftPicks, pointsForTeam, rosterForTeam, teamById, tradeItemsForSide } from './domain/selectors.js';
+
+const NAV=[['Dashboard',Gauge],['My Team',Users],['Trades',ArrowRightLeft],['Keepers',Crown],['Draft',DraftingCompass],['Commissioner',ShieldCheck]];
+const CURRENT_TEAM='team-sam';
+
+function useLeague(){const [state,setState]=useState(()=>leagueService.getState());useEffect(()=>leagueService.subscribe(setState),[]);return[state,setState];}
+function Button({children,onClick,kind='primary',disabled=false}){return <button className={`btn ${kind}`} onClick={onClick} disabled={disabled}>{children}</button>}
+function Card({title,icon:Icon,children,action}){return <section className="card"><div className="card-head"><div><div className="eyebrow">TEN SPORT</div><h2>{Icon&&<Icon size={18}/>} {title}</h2></div>{action}</div>{children}</section>}
+function Badge({children,tone='neutral'}){return <span className={`badge ${tone}`}>{children}</span>}
+function formatDate(s){return new Intl.DateTimeFormat('en-CA',{dateStyle:'medium',timeStyle:'short'}).format(new Date(s));}
+function run(action,setError){try{setError('');action();}catch(e){setError(e.message||'Something went wrong.');}}
+
+function Dashboard({state}){
+  const leaderboard=state.teams.map(t=>({...t,points:pointsForTeam(state,t.id)})).sort((a,b)=>b.points-a.points);
+  const sam=teamById(state,CURRENT_TEAM);
+  return <div className="grid two">
+    <Card title="League Standings" icon={Trophy}><div className="standings">{leaderboard.map((t,i)=><div className="standing" key={t.id}><strong>{i+1}</strong><div><b>{t.name}</b><small>{t.managerName}</small></div><span>{t.points.toLocaleString()} pts</span></div>)}</div></Card>
+    <Card title="Season Snapshot" icon={Activity}><div className="stats"><div><span>Season</span><b>{state.league.season}</b></div><div><span>Scoring</span><b>{state.league.scoringVersion}</b></div><div><span>Your roster</span><b>{rosterForTeam(state,sam.id).length}/20</b></div><div><span>Active</span><b>{activeRosterForTeam(state,sam.id).length}/15</b></div></div><div className="callout">Every asset tracks <b>Season Points</b> and <b>Points For You</b> separately. Benched production stays visible but does not count toward your standings total.</div></Card>
+    <Card title="Recent League Activity" icon={CalendarDays}><div className="timeline">{state.transactionLog.length?state.transactionLog.slice(0,8).map(x=><div key={x.id}><span>{x.type.replaceAll('_',' ')}</span><small>{formatDate(x.createdAt)}</small></div>):<p className="muted">No transactions yet. Make a lineup move, keeper choice, trade decision or draft pick to populate the audit log.</p>}</div></Card>
+    <Card title="League Architecture" icon={Database}><ul className="checklist"><li>20 owned assets · 15 Active · 5 Bench</li><li>3 free keepers</li><li>Asset + pick package trades</li><li>Permanent draft-pick provenance</li><li>Event-based lineup locks</li><li>Atomic draft/trade transactions in hosted backend</li></ul></Card>
+  </div>
+}
+
+function MyTeam({state,setError}){
+ const team=teamById(state,CURRENT_TEAM), active=activeRosterForTeam(state,CURRENT_TEAM), bench=benchRosterForTeam(state,CURRENT_TEAM);const [name,setName]=useState(team.name);
+ const row=(m,status)=><div className="asset-row" key={m.assetId}><div><div className="asset-name">{m.asset.name} <Badge>{m.asset.sport}</Badge></div><small>Season {m.asset.seasonPoints} · For You {m.asset.pointsForTeam}</small></div><Button kind={status===LINEUP_STATUS.ACTIVE?'ghost':'primary'} onClick={()=>run(()=>leagueService.setLineupStatus(CURRENT_TEAM,m.assetId,status===LINEUP_STATUS.ACTIVE?LINEUP_STATUS.BENCH:LINEUP_STATUS.ACTIVE),setError)}>{status===LINEUP_STATUS.ACTIVE?'Bench':'Activate'}</Button></div>;
+ return <div className="stack"><Card title="Team Identity" icon={Users}><div className="inline"><input value={name} onChange={e=>setName(e.target.value)} /><Button onClick={()=>run(()=>leagueService.renameTeam(CURRENT_TEAM,name),setError)}>Save Team Name</Button></div></Card><div className="grid two"><Card title={`Active · ${active.length}/15`} icon={Activity}>{active.map(m=>row(m,LINEUP_STATUS.ACTIVE))}</Card><Card title={`Bench · ${bench.length}/5`} icon={Users}>{bench.map(m=>row(m,LINEUP_STATUS.BENCH))}</Card></div></div>
+}
+
+function Trades({state,setError}){
+ const pending=state.trades.filter(t=>t.toTeamId===CURRENT_TEAM||t.fromTeamId===CURRENT_TEAM);
+ return <Card title="Trade Centre" icon={ArrowRightLeft}>{pending.map(t=>{const from=teamById(state,t.fromTeamId),to=teamById(state,t.toTeamId);return <div className="trade" key={t.id}><div className="trade-head"><div><b>{from.name}</b> → <b>{to.name}</b></div><Badge tone={t.status==='PENDING'?'warn':t.status==='ACCEPTED'?'good':'neutral'}>{t.status}</Badge></div><div className="trade-sides"><div><span>{from.name} sends</span>{tradeItemsForSide(state,t,'FROM').map(i=><p key={i.assetId||i.draftPickId}>{i.label}</p>)}</div><div><span>{to.name} sends</span>{tradeItemsForSide(state,t,'TO').map(i=><p key={i.assetId||i.draftPickId}>{i.label}</p>)}</div></div>{t.status==='PENDING'&&t.toTeamId===CURRENT_TEAM&&<div className="inline"><Button onClick={()=>run(()=>leagueService.acceptTrade(t.id),setError)}>Accept Trade</Button><Button kind="ghost" onClick={()=>run(()=>leagueService.declineTrade(t.id),setError)}>Decline</Button></div>}</div>})}</Card>
+}
+
+function Keepers({state,setError}){
+ const roster=rosterForTeam(state,CURRENT_TEAM), keepers=keeperIdsForTeam(state,CURRENT_TEAM);
+ return <Card title={`Keeper Centre · ${keepers.length}/3`} icon={Crown} action={<Badge tone="warn">Deadline {formatDate(state.league.keeperDeadline)}</Badge>}><p className="muted">Keep exactly three assets. Keepers cost no draft picks.</p><div className="keeper-grid">{roster.map(m=>{const on=keepers.includes(m.assetId);return <button key={m.assetId} className={`keeper ${on?'selected':''}`} onClick={()=>run(()=>leagueService.toggleKeeper(CURRENT_TEAM,m.assetId),setError)}><div><b>{m.asset.name}</b><small>{m.asset.sport} · {m.asset.seasonPoints} season pts</small></div>{on?<Crown size={18}/>:<span>Choose</span>}</button>})}</div></Card>
+}
+
+function Draft({state,setError}){
+ const order=draftOrder(state), current=order[state.draft.currentOverallPick-1], currentTeam=current?teamById(state,current.currentTeamId):null;
+ const unowned=state.assets.filter(a=>!state.rosterMemberships.some(m=>m.assetId===a.id)&&!state.draft.selections.some(x=>x.assetId===a.id));
+ return <div className="stack"><Card title="Live Draft Room" icon={DraftingCompass} action={<Badge tone={state.draft.status===DRAFT_STATUS.LIVE?'good':'warn'}>{state.draft.status}</Badge>}><div className="draft-banner"><div><span>ROUND {current?.round??'—'} · PICK {state.draft.currentOverallPick}</span><h3>{currentTeam?.name??'Draft complete'}</h3><small>{currentTeam?`${currentTeam.managerName} is on the clock`:'All selections completed'}</small></div><div className="timer">{state.draft.pickTimerSeconds}s</div></div>{state.draft.status===DRAFT_STATUS.LIVE&&currentTeam?.id===CURRENT_TEAM&&<div className="draft-pool">{unowned.slice(0,10).map(a=><button key={a.id} onClick={()=>run(()=>leagueService.makeDraftPick(a.id),setError)}><b>{a.name}</b><span>{a.sport} · {a.seasonPoints} pts</span></button>)}</div>}{state.draft.status!==DRAFT_STATUS.LIVE&&<p className="muted">Commissioner can start the draft from Commissioner controls.</p>}</Card><Card title="Recent Picks" icon={Trophy}>{state.draft.selections.length?state.draft.selections.slice(-8).reverse().map(s=><div className="selection" key={s.id}><b>#{s.overallPick}</b><span>{state.assets.find(a=>a.id===s.assetId)?.name}</span><small>{teamById(state,s.teamId)?.name}</small></div>):<p className="muted">No picks have been made yet.</p>}</Card></div>
+}
+
+function Commissioner({state,setError}){
+ return <div className="grid two"><Card title="Draft Controls" icon={ShieldCheck}><div className="stack tight"><div className="detail"><span>Scheduled</span><b>{formatDate(state.draft.scheduledAt)}</b></div><div className="detail"><span>Pick timer</span><b>{state.draft.pickTimerSeconds}s</b></div><div className="inline"><Button onClick={()=>run(()=>leagueService.setDraftStatus(DRAFT_STATUS.LIVE),setError)}>Start / Resume</Button><Button kind="ghost" onClick={()=>run(()=>leagueService.setDraftStatus(DRAFT_STATUS.PAUSED),setError)}>Pause</Button></div></div></Card><Card title="Future Draft Capital" icon={CalendarDays}>{ownedDraftPicks(state,CURRENT_TEAM).slice(0,8).map(p=><div className="detail" key={p.id}><span>{p.season} Round {p.round}</span><b>Originally {teamById(state,p.originalTeamId)?.managerName}</b></div>)}</Card><Card title="Development Tools" icon={Database}><p className="muted">Reset restores the v0.3 demo league and clears local changes.</p><Button kind="danger" onClick={()=>run(()=>leagueService.reset(),setError)}><RotateCcw size={16}/> Reset Demo Data</Button></Card><Card title="Hosted Backend Next" icon={Database}><ul className="checklist"><li>Authentication and league invitations</li><li>Postgres persistence</li><li>Realtime live draft subscriptions</li><li>Transactional trade/draft RPCs</li><li>Logo storage and notifications</li></ul></Card></div>
+}
+
+export default function App(){const[state]=useLeague();const[page,setPage]=useState('Dashboard');const[error,setError]=useState('');const content=useMemo(()=>({Dashboard:<Dashboard state={state}/>, 'My Team':<MyTeam state={state} setError={setError}/>,Trades:<Trades state={state} setError={setError}/>,Keepers:<Keepers state={state} setError={setError}/>,Draft:<Draft state={state} setError={setError}/>,Commissioner:<Commissioner state={state} setError={setError}/>}[page]),[page,state]);return <div className="app"><aside><div className="brand"><div>10</div><span><b>TEN SPORT</b><small>Fantasy League</small></span></div><nav>{NAV.map(([label,Icon])=><button key={label} className={page===label?'active':''} onClick={()=>{setPage(label);setError('')}}><Icon size={18}/>{label}</button>)}</nav><div className="aside-foot"><Badge tone="good">v0.3</Badge><small>Multi-user-ready architecture</small></div></aside><main><header><div><div className="eyebrow">{state.league.season}</div><h1>{page}</h1></div><div className="profile"><span>Sam</span><Badge tone="good">Commissioner</Badge></div></header>{error&&<div className="error">{error}<button onClick={()=>setError('')}>×</button></div>}{content}</main></div>}
