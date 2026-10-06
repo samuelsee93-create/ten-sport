@@ -528,20 +528,80 @@ function Assets({ state }) {
   const [query, setQuery] = useState('');
   const [sport, setSport] = useState('ALL');
   const [availability, setAvailability] = useState('ALL');
-  const [sort, setSort] = useState('POINTS');
+  const [sort, setSort] = useState({ key: 'POINTS', direction: 'DESC' });
 
   const sports = [...new Set(state.assets.map((asset) => asset.sport))].sort();
-  const ownershipByAsset = Object.fromEntries(state.rosterMemberships.map((membership) => [membership.assetId, membership.teamId]));
+  const ownershipByAsset = Object.fromEntries(
+    state.rosterMemberships.map((membership) => [membership.assetId, membership.teamId])
+  );
+
+  const rankedAssets = useMemo(() => {
+    const base = state.assets.map((asset) => ({
+      asset,
+      previous: previousScore(state, asset),
+    }));
+
+    const overall = [...base].sort((a, b) =>
+      (b.previous?.points ?? 0) - (a.previous?.points ?? 0)
+      || a.asset.sport.localeCompare(b.asset.sport)
+      || a.asset.name.localeCompare(b.asset.name)
+    );
+
+    const overallRankById = Object.fromEntries(
+      overall.map((row, index) => [row.asset.id, index + 1])
+    );
+
+    const sportRankById = {};
+    for (const sportName of [...new Set(base.map((row) => row.asset.sport))]) {
+      const sportRows = base
+        .filter((row) => row.asset.sport === sportName)
+        .sort((a, b) =>
+          (b.previous?.points ?? 0) - (a.previous?.points ?? 0)
+          || a.asset.name.localeCompare(b.asset.name)
+        );
+
+      sportRows.forEach((row, index) => {
+        sportRankById[row.asset.id] = index + 1;
+      });
+    }
+
+    return { overallRankById, sportRankById };
+  }, [state.assets, state.league?.season]);
+
+  const changeSort = (key, defaultDirection = 'ASC') => {
+    setSort((current) => ({
+      key,
+      direction: current.key === key
+        ? (current.direction === 'ASC' ? 'DESC' : 'ASC')
+        : defaultDirection,
+    }));
+  };
+
+  const indicator = (key) => {
+    if (sort.key !== key) return '↕';
+    return sort.direction === 'ASC' ? '↑' : '↓';
+  };
+
+  const direction = sort.direction === 'ASC' ? 1 : -1;
 
   const rows = state.assets
     .map((asset) => {
       const previous = previousScore(state, asset);
       const ownerTeamId = ownershipByAsset[asset.id] ?? null;
       const owner = ownerTeamId ? teamById(state, ownerTeamId) : null;
-      return { asset, previous, owner };
+      return {
+        asset,
+        previous,
+        owner,
+        previousPoints: previous?.points ?? 0,
+        overallRank: rankedAssets.overallRankById[asset.id] ?? Number.MAX_SAFE_INTEGER,
+        sportRank: rankedAssets.sportRankById[asset.id] ?? Number.MAX_SAFE_INTEGER,
+        status: owner ? 'ROSTERED' : 'AVAILABLE',
+      };
     })
     .filter(({ asset, owner }) => {
-      const matchesQuery = !query.trim() || asset.name.toLowerCase().includes(query.trim().toLowerCase());
+      const matchesQuery = !query.trim()
+        || asset.name.toLowerCase().includes(query.trim().toLowerCase());
       const matchesSport = sport === 'ALL' || asset.sport === sport;
       const matchesAvailability = availability === 'ALL'
         || (availability === 'AVAILABLE' && !owner)
@@ -549,44 +609,102 @@ function Assets({ state }) {
       return matchesQuery && matchesSport && matchesAvailability;
     })
     .sort((a, b) => {
-      if (sort === 'NAME') return a.asset.name.localeCompare(b.asset.name);
-      if (sort === 'SPORT') return a.asset.sport.localeCompare(b.asset.sport) || a.asset.name.localeCompare(b.asset.name);
-      if (sort === 'RANK') return (a.previous?.rank ?? Number.MAX_SAFE_INTEGER) - (b.previous?.rank ?? Number.MAX_SAFE_INTEGER);
-      return (b.previous?.points ?? -1) - (a.previous?.points ?? -1) || a.asset.name.localeCompare(b.asset.name);
+      let comparison = 0;
+
+      if (sort.key === 'NAME') {
+        comparison = a.asset.name.localeCompare(b.asset.name);
+      } else if (sort.key === 'SPORT') {
+        comparison = a.asset.sport.localeCompare(b.asset.sport)
+          || a.asset.name.localeCompare(b.asset.name);
+      } else if (sort.key === 'POINTS') {
+        comparison = a.previousPoints - b.previousPoints
+          || b.asset.name.localeCompare(a.asset.name);
+      } else if (sort.key === 'RANK') {
+        comparison = a.overallRank - b.overallRank;
+      } else if (sort.key === 'STATUS') {
+        comparison = a.status.localeCompare(b.status)
+          || (a.owner?.name ?? '').localeCompare(b.owner?.name ?? '')
+          || a.asset.name.localeCompare(b.asset.name);
+      }
+
+      return comparison * direction;
     });
+
+  const SortHeader = ({ sortKey, children, defaultDirection = 'ASC', numeric = false }) => (
+    <th className={numeric ? 'numeric' : ''}>
+      <button
+        type="button"
+        className={`sort-header ${sort.key === sortKey ? 'active' : ''}`}
+        onClick={() => changeSort(sortKey, defaultDirection)}
+        title={`Sort by ${String(children).toLowerCase()}`}
+      >
+        <span>{children}</span>
+        <span className="sort-indicator">{indicator(sortKey)}</span>
+      </button>
+    </th>
+  );
 
   return (
     <Card title="Draftable Assets" icon={List} action={<Badge>{state.assets.length} assets</Badge>}>
-      <p className="muted">Historical points show what each asset would have scored under the Ten Sport scoring model.</p>
-      <div className="asset-toolbar">
+      <p className="muted">
+        Previous-season points use the Ten Sport v1.2 model. Rank is shown as overall rank across every draftable asset, followed by rank within that sport.
+      </p>
+
+      <div className="asset-toolbar asset-toolbar-compact">
         <label className="search-box">
           <Search size={16} />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search assets…" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter asset name…"
+          />
         </label>
+
         <select value={sport} onChange={(e) => setSport(e.target.value)}>
           <option value="ALL">All sports</option>
           {sports.map((item) => <option key={item} value={item}>{item}</option>)}
         </select>
+
         <select value={availability} onChange={(e) => setAvailability(e.target.value)}>
-          <option value="ALL">All assets</option><option value="AVAILABLE">Available only</option><option value="ROSTERED">Rostered only</option>
-        </select>
-        <select value={sort} onChange={(e) => setSort(e.target.value)}>
-          <option value="POINTS">Sort: previous points</option><option value="RANK">Sort: previous rank</option><option value="NAME">Sort: name</option><option value="SPORT">Sort: sport</option>
+          <option value="ALL">All statuses</option>
+          <option value="AVAILABLE">Available only</option>
+          <option value="ROSTERED">Rostered only</option>
         </select>
       </div>
+
       {state.assets.length === 0 ? (
-        <div className="empty-state"><b>The asset database is ready.</b><span>No real-world assets have been imported yet.</span></div>
+        <div className="empty-state">
+          <b>The asset database is ready.</b>
+          <span>No real-world assets have been imported yet.</span>
+        </div>
       ) : (
         <div className="asset-table-wrap">
           <table className="asset-table">
-            <thead><tr><th>Asset</th><th>Sport</th><th>Previous Season</th><th>Points</th><th>Rank</th><th>Status</th></tr></thead>
+            <thead>
+              <tr>
+                <SortHeader sortKey="NAME">Asset</SortHeader>
+                <SortHeader sortKey="SPORT">Sport</SortHeader>
+                <th>Previous Season</th>
+                <SortHeader sortKey="POINTS" defaultDirection="DESC" numeric>Points</SortHeader>
+                <SortHeader sortKey="RANK" numeric>Rank</SortHeader>
+                <SortHeader sortKey="STATUS">Status</SortHeader>
+              </tr>
+            </thead>
             <tbody>
-              {rows.map(({ asset, previous, owner }) => (
+              {rows.map(({ asset, previous, owner, previousPoints, overallRank, sportRank }) => (
                 <tr key={asset.id}>
-                  <td><b>{asset.name}</b></td><td><Badge>{asset.sport}</Badge></td><td>{previous?.seasonLabel ?? '—'}</td>
-                  <td className="numeric">{previous ? previous.points.toLocaleString() : '—'}</td>
-                  <td className="numeric">{previous?.rank ? `#${previous.rank}` : '—'}</td>
-                  <td>{owner ? <Badge>{owner.name}</Badge> : <Badge tone="good">Available</Badge>}</td>
+                  <td><b>{asset.name}</b></td>
+                  <td><Badge>{asset.sport}</Badge></td>
+                  <td>{previous?.seasonLabel ?? '—'}</td>
+                  <td className="numeric">{previousPoints.toLocaleString()}</td>
+                  <td className="numeric rank-cell">
+                    #{overallRank} <span>({asset.sport} #{sportRank})</span>
+                  </td>
+                  <td>
+                    {owner
+                      ? <Badge>{owner.name}</Badge>
+                      : <Badge tone="good">Available</Badge>}
+                  </td>
                 </tr>
               ))}
             </tbody>
