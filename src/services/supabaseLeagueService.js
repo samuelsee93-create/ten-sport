@@ -809,6 +809,7 @@ export class SupabaseLeagueService {
     if (draftId) {
       channel = channel
         .on('postgres_changes', { event: '*', schema: 'public', table: 'drafts', filter: `id=eq.${draftId}` }, onChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'draft_order', filter: `draft_id=eq.${draftId}` }, onChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'draft_selections', filter: `draft_id=eq.${draftId}` }, onChange);
     }
 
