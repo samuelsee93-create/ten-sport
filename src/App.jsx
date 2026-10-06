@@ -796,7 +796,7 @@ function Keepers({ state, teamId, setError }) {
                   <small>
                     {membership.asset.sport}
                     {keeper
-                      ? ` · Year ${keeper.keeperYear} · Costs Round ${keeper.costRound}`
+                      ? ` · ${keeper.sourceType === 'WAIVER' ? 'Waiver' : 'Draft'} source · Year ${keeper.keeperYear} · Costs Round ${keeper.costRound}`
                       : ' · Select to calculate keeper cost'}
                   </small>
                 </div>
@@ -1015,7 +1015,7 @@ function Commissioner({ state, teamId, setError }) {
       <Card title="Hosted Backend" icon={Database}>
         <ul className="checklist">
           <li>Multi-league manager accounts</li><li>Unique league join codes</li><li>Postgres persistence + RLS</li>
-          <li>Realtime roster/transaction refresh</li><li>Historical season snapshots</li><li>Dedicated sport-slot enforcement</li>
+          <li>Realtime roster/transaction refresh</li><li>Historical season snapshots</li><li>10-sport roster coverage enforcement</li>
         </ul>
       </Card>
     </div>
@@ -1113,7 +1113,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.7 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.8 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>
