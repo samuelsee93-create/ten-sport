@@ -2,8 +2,8 @@
 
 Ten Sport is a keeper fantasy league spanning ten sports in one shared season-long competition.
 
-## v0.3
-This build moves the project from a single-user prototype toward a multi-user-ready architecture.
+## v0.4 backend
+This branch adds the live multi-user Supabase architecture while preserving the existing league rules and UI-facing service contract.
 
 ### League rules represented
 - 20 assets per team
@@ -31,4 +31,4 @@ npm run build
 See `docs/ARCHITECTURE.md` and `db/schema.sql`.
 
 ## Current persistence
-v0.3 uses browser local storage through a service layer. The next milestone replaces that implementation with hosted auth, Postgres and realtime synchronization without changing the domain-facing UI calls.
+The app keeps the local browser service as a zero-config fallback. When `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are configured, it switches to Supabase Auth, Postgres/RLS, transactional RPCs and Realtime-backed league state.
