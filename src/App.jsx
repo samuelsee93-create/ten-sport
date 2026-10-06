@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
-  ArrowRightLeft,
+  ArrowLeftRight,
   CalendarDays,
   Crown,
   Database,
   DraftingCompass,
   Gauge,
+  History as HistoryIcon,
+  Layers3,
   List,
   LogOut,
   Palette,
-  RotateCcw,
   Search,
   ShieldCheck,
   Trophy,
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react';
 import { hostedBackendEnabled, leagueService } from './services/service.js';
 import { signIn, signOut, signUp } from './services/authService.js';
-import { LINEUP_STATUS, DRAFT_STATUS } from './domain/constants.js';
+import { DRAFT_STATUS, LINEUP_STATUS, SPORTS } from './domain/constants.js';
 import {
   activeRosterForTeam,
   benchRosterForTeam,
@@ -35,7 +36,9 @@ const NAV = [
   ['Dashboard', Gauge],
   ['My Team', Users],
   ['Assets', List],
-  ['Trades', ArrowRightLeft],
+  ['Transactions', ArrowLeftRight],
+  ['History', HistoryIcon],
+  ['Leagues', Layers3],
   ['Keepers', Crown],
   ['Draft', DraftingCompass],
   ['Commissioner', ShieldCheck],
@@ -48,9 +51,10 @@ function useLeague() {
 
   const reload = async () => {
     if (!hostedBackendEnabled) {
-      setState(leagueService.getState());
+      const next = leagueService.getState();
+      setState(next);
       setBootError(null);
-      return leagueService.getState();
+      return next;
     }
 
     setLoading(true);
@@ -80,17 +84,17 @@ function useLeague() {
   return { state, loading, bootError, reload };
 }
 
-function Button({ children, onClick, kind = 'primary', disabled = false }) {
+function Button({ children, onClick, kind = 'primary', disabled = false, type = 'button' }) {
   return (
-    <button className={`btn ${kind}`} onClick={onClick} disabled={disabled}>
+    <button type={type} className={`btn ${kind}`} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );
 }
 
-function Card({ title, icon: Icon, children, action }) {
+function Card({ title, icon: Icon, children, action, className = '' }) {
   return (
-    <section className="card">
+    <section className={`card ${className}`}>
       <div className="card-head">
         <div>
           <div className="eyebrow">TEN SPORT</div>
@@ -115,6 +119,13 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function toLocalDateTimeInput(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 async function run(action, setError) {
   try {
     setError('');
@@ -122,6 +133,10 @@ async function run(action, setError) {
   } catch (error) {
     setError(error.message || 'Something went wrong.');
   }
+}
+
+function previousScore(state, asset) {
+  return (asset?.history ?? []).find((row) => row.seasonLabel !== state.league?.season) ?? null;
 }
 
 function AuthScreen({ onAuthenticated }) {
@@ -138,7 +153,6 @@ function AuthScreen({ onAuthenticated }) {
     setBusy(true);
     setError('');
     setMessage('');
-
     try {
       if (mode === 'signup') {
         const data = await signUp({ email, password, displayName });
@@ -169,36 +183,18 @@ function AuthScreen({ onAuthenticated }) {
         <h1>{mode === 'signin' ? 'Sign in' : 'Create manager account'}</h1>
         <p className="muted">
           {mode === 'signin'
-            ? 'Sign in to load your league, roster, trades, keepers and live draft state.'
-            : 'Create an account. Your league membership and team determine what you can access.'}
+            ? 'Sign in to your leagues, rosters, transactions, history and live drafts.'
+            : 'Create one account, then create or join as many Ten Sport leagues as you want.'}
         </p>
         <form className="stack tight" onSubmit={submit}>
           {mode === 'signup' && (
-            <input
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Display name"
-              required
-            />
+            <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display name" required />
           )}
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            minLength={8}
-            required
-          />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" minLength={8} required />
           {error && <div className="error">{error}</div>}
           {message && <div className="callout">{message}</div>}
-          <Button disabled={busy}>{busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}</Button>
+          <Button type="submit" disabled={busy}>{busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}</Button>
         </form>
         <button
           className="auth-switch"
@@ -215,7 +211,88 @@ function AuthScreen({ onAuthenticated }) {
   );
 }
 
-function Dashboard({ state, teamId }) {
+function LeagueForms({ onComplete, currentSeason = '2026-27' }) {
+  const [mode, setMode] = useState('join');
+  const [leagueName, setLeagueName] = useState('');
+  const [teamName, setTeamName] = useState('');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      if (mode === 'join') {
+        await leagueService.joinLeague({ code, teamName });
+      } else {
+        await leagueService.createLeague({
+          name: leagueName,
+          teamName,
+          seasonLabel: currentSeason,
+          scoringVersion: 'v1.0',
+        });
+      }
+      onComplete?.();
+    } catch (e) {
+      setError(e.message || 'Unable to continue.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="league-form">
+      <div className="segmented">
+        <button className={mode === 'join' ? 'active' : ''} onClick={() => setMode('join')}>Join league</button>
+        <button className={mode === 'create' ? 'active' : ''} onClick={() => setMode('create')}>Create league</button>
+      </div>
+      <form className="stack tight" onSubmit={submit}>
+        {mode === 'create' ? (
+          <input value={leagueName} onChange={(e) => setLeagueName(e.target.value)} placeholder="League name" required />
+        ) : (
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8))}
+            placeholder="8-character league code"
+            required
+            minLength={8}
+            maxLength={8}
+          />
+        )}
+        <input value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="Your team name" required />
+        {error && <div className="error">{error}</div>}
+        <Button type="submit" disabled={busy}>
+          {busy ? 'Working…' : mode === 'join' ? 'Join League' : 'Create League'}
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+function LeagueHub({ state }) {
+  return (
+    <div className="auth-shell">
+      <div className="auth-card league-hub-card">
+        <div className="brand auth-brand">
+          <div>10</div>
+          <span><b>TEN SPORT</b><small>Fantasy League</small></span>
+        </div>
+        <div className="eyebrow">WELCOME {state.currentUser?.displayName?.toUpperCase()}</div>
+        <h1>Choose your league</h1>
+        <p className="muted">Join a friend's league with their code, or create a new one and become commissioner.</p>
+        <LeagueForms />
+        <Button kind="ghost" onClick={async () => {
+          await signOut();
+          window.location.reload();
+        }}><LogOut size={16} /> Sign out</Button>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ state, teamId, onOpenTeam }) {
   const leaderboard = state.teams
     .map((team) => ({ ...team, points: pointsForTeam(state, team.id) }))
     .sort((a, b) => b.points - a.points);
@@ -226,11 +303,11 @@ function Dashboard({ state, teamId }) {
       <Card title="League Standings" icon={Trophy}>
         <div className="standings">
           {leaderboard.map((row, index) => (
-            <div className="standing" key={row.id}>
+            <button className="standing standing-button" key={row.id} onClick={() => onOpenTeam(row.id)}>
               <strong>{index + 1}</strong>
               <div><b>{row.name}</b><small>{row.managerName}</small></div>
               <span>{row.points.toLocaleString()} pts</span>
-            </div>
+            </button>
           ))}
         </div>
       </Card>
@@ -242,8 +319,7 @@ function Dashboard({ state, teamId }) {
           <div><span>Active</span><b>{team ? activeRosterForTeam(state, team.id).length : 0}/15</b></div>
         </div>
         <div className="callout">
-          Every asset tracks <b>Season Points</b> and <b>Points For You</b> separately.
-          Benched production stays visible but does not count toward your standings total.
+          Every team has 10 dedicated sport slots plus 10 flex slots. Active/Bench remains separate: 15 score and 5 sit each scoring lock.
         </div>
       </Card>
       <Card title="Recent League Activity" icon={CalendarDays}>
@@ -260,14 +336,47 @@ function Dashboard({ state, teamId }) {
       </Card>
       <Card title="League Architecture" icon={Database}>
         <ul className="checklist">
-          <li>20 owned assets · 15 Active · 5 Bench</li>
+          <li>20 assets · 10 sport slots + 10 flex</li>
+          <li>15 Active · 5 Bench</li>
           <li>3 free keepers</li>
-          <li>Asset + pick package trades</li>
-          <li>Permanent draft-pick provenance</li>
-          <li>Event-based lineup locks</li>
-          <li>Atomic draft/trade transactions in hosted backend</li>
+          <li>Asset + draft-pick trades</li>
+          <li>Permanent pick provenance</li>
+          <li>Multi-league accounts + join codes</li>
         </ul>
       </Card>
+    </div>
+  );
+}
+
+function RosterStructure({ state, teamId }) {
+  const roster = rosterForTeam(state, teamId);
+  const dedicatedBySport = Object.fromEntries(
+    roster
+      .filter((row) => row.rosterSlotType === 'SPORT' && row.rosterSlotSport)
+      .map((row) => [row.rosterSlotSport, row])
+  );
+  const flex = roster.filter((row) => row.rosterSlotType !== 'SPORT');
+
+  return (
+    <div className="slot-grid">
+      {SPORTS.map((sport) => {
+        const row = dedicatedBySport[sport];
+        return (
+          <div className={`roster-slot ${row ? 'filled' : 'empty'}`} key={sport}>
+            <span>{sport}</span>
+            <b>{row?.asset?.name ?? 'Open dedicated slot'}</b>
+          </div>
+        );
+      })}
+      {Array.from({ length: 10 }).map((_, index) => {
+        const row = flex[index];
+        return (
+          <div className={`roster-slot flex ${row ? 'filled' : 'empty'}`} key={`flex-${index}`}>
+            <span>FLEX {index + 1}</span>
+            <b>{row?.asset?.name ?? 'Open flex slot'}</b>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -292,7 +401,10 @@ function MyTeam({ state, teamId, setError }) {
     <div className="asset-row" key={membership.assetId}>
       <div>
         <div className="asset-name">{membership.asset.name} <Badge>{membership.asset.sport}</Badge></div>
-        <small>Season {membership.asset.seasonPoints} · For You {membership.asset.pointsForTeam}</small>
+        <small>
+          {membership.rosterSlotType === 'SPORT' ? `Dedicated ${membership.rosterSlotSport}` : 'Flex'} ·
+          {' '}Season {membership.asset.seasonPoints} · For You {membership.asset.pointsForTeam}
+        </small>
       </div>
       <Button
         kind={status === LINEUP_STATUS.ACTIVE ? 'ghost' : 'primary'}
@@ -331,18 +443,97 @@ function MyTeam({ state, teamId, setError }) {
           </div>
         </div>
       </Card>
+      <Card title="Roster Structure · 10 Sport + 10 Flex" icon={List}>
+        <RosterStructure state={state} teamId={teamId} />
+      </Card>
       <div className="grid two">
         <Card title={`Active · ${active.length}/15`} icon={Activity}>
-          {active.map((membership) => row(membership, LINEUP_STATUS.ACTIVE))}
+          {active.length ? active.map((membership) => row(membership, LINEUP_STATUS.ACTIVE)) : <p className="muted">No active assets yet.</p>}
         </Card>
         <Card title={`Bench · ${bench.length}/5`} icon={Users}>
-          {bench.map((membership) => row(membership, LINEUP_STATUS.BENCH))}
+          {bench.length ? bench.map((membership) => row(membership, LINEUP_STATUS.BENCH)) : <p className="muted">No benched assets yet.</p>}
         </Card>
       </div>
     </div>
   );
 }
 
+function TeamDetail({ state, teamId, onBack }) {
+  const team = teamById(state, teamId);
+  const [sort, setSort] = useState('CURRENT');
+  if (!team) return <Card title="Team" icon={Users}><p className="muted">Team not found.</p></Card>;
+
+  const rows = rosterForTeam(state, teamId)
+    .map((membership) => ({
+      ...membership,
+      currentPoints: state.teamAssetPointsById?.[teamId]?.[membership.assetId] ?? 0,
+      previous: previousScore(state, membership.asset),
+    }))
+    .sort((a, b) => {
+      if (sort === 'PREVIOUS') return (b.previous?.points ?? -1) - (a.previous?.points ?? -1);
+      return b.currentPoints - a.currentPoints;
+    });
+
+  const sportTotals = Object.fromEntries(SPORTS.map((sport) => [sport, 0]));
+  rows.forEach((row) => {
+    sportTotals[row.asset.sport] = (sportTotals[row.asset.sport] ?? 0) + row.currentPoints;
+  });
+
+  return (
+    <div className="stack">
+      <div className="team-detail-head">
+        <Button kind="ghost" onClick={onBack}>← Back</Button>
+        <div>
+          <h2>{team.name}</h2>
+          <span className="muted">{team.managerName}</span>
+        </div>
+        <div className="team-total"><span>Season total</span><b>{pointsForTeam(state, teamId).toLocaleString()} pts</b></div>
+      </div>
+      <Card title="Points by Sport" icon={Trophy}>
+        <div className="sport-total-grid">
+          {SPORTS.map((sport) => (
+            <div key={sport}><span>{sport}</span><b>{sportTotals[sport].toLocaleString()}</b></div>
+          ))}
+        </div>
+      </Card>
+      <Card title="Roster Slots" icon={List}>
+        <RosterStructure state={state} teamId={teamId} />
+      </Card>
+      <Card
+        title="Roster Performance"
+        icon={Activity}
+        action={
+          <select value={sort} onChange={(e) => setSort(e.target.value)}>
+            <option value="CURRENT">Sort: this season points</option>
+            <option value="PREVIOUS">Sort: previous season points</option>
+          </select>
+        }
+      >
+        <div className="asset-table-wrap">
+          <table className="asset-table">
+            <thead>
+              <tr>
+                <th>Asset</th><th>Sport</th><th>Roster Slot</th><th>This Season</th><th>Previous Season</th><th>Lineup</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.assetId}>
+                  <td><b>{row.asset.name}</b></td>
+                  <td><Badge>{row.asset.sport}</Badge></td>
+                  <td>{row.rosterSlotType === 'SPORT' ? `Dedicated ${row.rosterSlotSport}` : 'Flex'}</td>
+                  <td className="numeric">{row.currentPoints.toLocaleString()}</td>
+                  <td className="numeric">{row.previous ? row.previous.points.toLocaleString() : '—'}</td>
+                  <td><Badge tone={row.lineupStatus === 'ACTIVE' ? 'good' : 'neutral'}>{row.lineupStatus}</Badge></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 function Assets({ state }) {
   const [query, setQuery] = useState('');
@@ -351,20 +542,17 @@ function Assets({ state }) {
   const [sort, setSort] = useState('POINTS');
 
   const sports = [...new Set(state.assets.map((asset) => asset.sport))].sort();
-  const ownershipByAsset = Object.fromEntries(
-    state.rosterMemberships.map((membership) => [membership.assetId, membership.teamId])
-  );
+  const ownershipByAsset = Object.fromEntries(state.rosterMemberships.map((membership) => [membership.assetId, membership.teamId]));
 
   const rows = state.assets
     .map((asset) => {
-      const previous = (asset.history ?? []).find((item) => item.seasonLabel !== state.league.season) ?? null;
+      const previous = previousScore(state, asset);
       const ownerTeamId = ownershipByAsset[asset.id] ?? null;
       const owner = ownerTeamId ? teamById(state, ownerTeamId) : null;
       return { asset, previous, owner };
     })
     .filter(({ asset, owner }) => {
-      const matchesQuery = !query.trim()
-        || asset.name.toLowerCase().includes(query.trim().toLowerCase());
+      const matchesQuery = !query.trim() || asset.name.toLowerCase().includes(query.trim().toLowerCase());
       const matchesSport = sport === 'ALL' || asset.sport === sport;
       const matchesAvailability = availability === 'ALL'
         || (availability === 'AVAILABLE' && !owner)
@@ -379,76 +567,37 @@ function Assets({ state }) {
     });
 
   return (
-    <Card
-      title="Draftable Assets"
-      icon={List}
-      action={<Badge>{state.assets.length} assets</Badge>}
-    >
-      <p className="muted">
-        The master draft pool. Historical points show what each asset would have scored under the Ten Sport scoring model.
-      </p>
+    <Card title="Draftable Assets" icon={List} action={<Badge>{state.assets.length} assets</Badge>}>
+      <p className="muted">Historical points show what each asset would have scored under the Ten Sport scoring model.</p>
       <div className="asset-toolbar">
         <label className="search-box">
           <Search size={16} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search assets…"
-          />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search assets…" />
         </label>
-        <select value={sport} onChange={(event) => setSport(event.target.value)}>
+        <select value={sport} onChange={(e) => setSport(e.target.value)}>
           <option value="ALL">All sports</option>
           {sports.map((item) => <option key={item} value={item}>{item}</option>)}
         </select>
-        <select value={availability} onChange={(event) => setAvailability(event.target.value)}>
-          <option value="ALL">All assets</option>
-          <option value="AVAILABLE">Available only</option>
-          <option value="ROSTERED">Rostered only</option>
+        <select value={availability} onChange={(e) => setAvailability(e.target.value)}>
+          <option value="ALL">All assets</option><option value="AVAILABLE">Available only</option><option value="ROSTERED">Rostered only</option>
         </select>
-        <select value={sort} onChange={(event) => setSort(event.target.value)}>
-          <option value="POINTS">Sort: previous points</option>
-          <option value="RANK">Sort: previous rank</option>
-          <option value="NAME">Sort: name</option>
-          <option value="SPORT">Sort: sport</option>
+        <select value={sort} onChange={(e) => setSort(e.target.value)}>
+          <option value="POINTS">Sort: previous points</option><option value="RANK">Sort: previous rank</option><option value="NAME">Sort: name</option><option value="SPORT">Sort: sport</option>
         </select>
       </div>
-
       {state.assets.length === 0 ? (
-        <div className="empty-state">
-          <b>The asset database is ready.</b>
-          <span>No real-world assets have been imported yet. That is the next data-ingestion step.</span>
-        </div>
-      ) : rows.length === 0 ? (
-        <div className="empty-state">
-          <b>No assets match those filters.</b>
-          <span>Try clearing the search or changing a filter.</span>
-        </div>
+        <div className="empty-state"><b>The asset database is ready.</b><span>No real-world assets have been imported yet.</span></div>
       ) : (
         <div className="asset-table-wrap">
           <table className="asset-table">
-            <thead>
-              <tr>
-                <th>Asset</th>
-                <th>Sport</th>
-                <th>Previous season</th>
-                <th>Points</th>
-                <th>Rank</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Asset</th><th>Sport</th><th>Previous Season</th><th>Points</th><th>Rank</th><th>Status</th></tr></thead>
             <tbody>
               {rows.map(({ asset, previous, owner }) => (
                 <tr key={asset.id}>
-                  <td><b>{asset.name}</b></td>
-                  <td><Badge>{asset.sport}</Badge></td>
-                  <td>{previous?.seasonLabel ?? '—'}</td>
+                  <td><b>{asset.name}</b></td><td><Badge>{asset.sport}</Badge></td><td>{previous?.seasonLabel ?? '—'}</td>
                   <td className="numeric">{previous ? previous.points.toLocaleString() : '—'}</td>
                   <td className="numeric">{previous?.rank ? `#${previous.rank}` : '—'}</td>
-                  <td>
-                    {owner
-                      ? <Badge>{owner.name}</Badge>
-                      : <Badge tone="good">Available</Badge>}
-                  </td>
+                  <td>{owner ? <Badge>{owner.name}</Badge> : <Badge tone="good">Available</Badge>}</td>
                 </tr>
               ))}
             </tbody>
@@ -459,42 +608,161 @@ function Assets({ state }) {
   );
 }
 
-function Trades({ state, teamId, setError }) {
-  const relevant = state.trades.filter((trade) => trade.toTeamId === teamId || trade.fromTeamId === teamId);
+function TradeCard({ state, trade, teamId, setError, interactive = false }) {
+  const from = teamById(state, trade.fromTeamId);
+  const to = teamById(state, trade.toTeamId);
   return (
-    <Card title="Trade Centre" icon={ArrowRightLeft}>
-      {relevant.length === 0 && <p className="muted">No trades yet.</p>}
-      {relevant.map((trade) => {
-        const from = teamById(state, trade.fromTeamId);
-        const to = teamById(state, trade.toTeamId);
-        return (
-          <div className="trade" key={trade.id}>
-            <div className="trade-head">
-              <div><b>{from?.name ?? 'Unknown team'}</b> → <b>{to?.name ?? 'Unknown team'}</b></div>
-              <Badge tone={trade.status === 'PENDING' ? 'warn' : trade.status === 'ACCEPTED' ? 'good' : 'neutral'}>
-                {trade.status}
-              </Badge>
-            </div>
-            <div className="trade-sides">
-              <div>
-                <span>{from?.name ?? 'Team'} sends</span>
-                {tradeItemsForSide(state, trade, 'FROM').map((item) => <p key={item.id ?? item.assetId ?? item.draftPickId}>{item.label}</p>)}
+    <div className="trade">
+      <div className="trade-head">
+        <div><b>{from?.name ?? 'Unknown team'}</b> → <b>{to?.name ?? 'Unknown team'}</b></div>
+        <Badge tone={trade.status === 'PENDING' ? 'warn' : trade.status === 'ACCEPTED' ? 'good' : 'neutral'}>{trade.status}</Badge>
+      </div>
+      <div className="trade-sides">
+        <div><span>{from?.name ?? 'Team'} sends</span>{tradeItemsForSide(state, trade, 'FROM').map((item) => <p key={item.id ?? item.assetId ?? item.draftPickId}>{item.label}</p>)}</div>
+        <div><span>{to?.name ?? 'Team'} sends</span>{tradeItemsForSide(state, trade, 'TO').map((item) => <p key={item.id ?? item.assetId ?? item.draftPickId}>{item.label}</p>)}</div>
+      </div>
+      {interactive && trade.status === 'PENDING' && trade.toTeamId === teamId && (
+        <div className="inline">
+          <Button onClick={() => run(() => leagueService.acceptTrade(trade.id), setError)}>Accept Trade</Button>
+          <Button kind="ghost" onClick={() => run(() => leagueService.declineTrade(trade.id), setError)}>Decline</Button>
+        </div>
+      )}
+      <small>{formatDate(trade.resolvedAt ?? trade.createdAt)}</small>
+    </div>
+  );
+}
+
+function Transactions({ state, teamId, setError }) {
+  const pending = state.trades.filter((trade) => trade.status === 'PENDING' && (trade.toTeamId === teamId || trade.fromTeamId === teamId));
+  const completedTrades = state.trades.filter((trade) => trade.status !== 'PENDING');
+
+  const activity = [
+    ...completedTrades.map((trade) => ({ kind: 'TRADE', date: trade.resolvedAt ?? trade.createdAt, trade })),
+    ...(state.waiverTransactions ?? []).map((waiver) => ({ kind: 'WAIVER', date: waiver.createdAt, waiver })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return (
+    <div className="stack">
+      <Card title="Pending Trades" icon={ArrowLeftRight}>
+        {pending.length ? pending.map((trade) => <TradeCard key={trade.id} state={state} trade={trade} teamId={teamId} setError={setError} interactive />) : <p className="muted">No pending trades for your team.</p>}
+      </Card>
+      <Card title="Transaction Log" icon={HistoryIcon}>
+        {activity.length === 0 && <p className="muted">No completed trades or waiver pickups yet.</p>}
+        <div className="transaction-list">
+          {activity.map((item) => {
+            if (item.kind === 'TRADE') {
+              const from = teamById(state, item.trade.fromTeamId);
+              const to = teamById(state, item.trade.toTeamId);
+              return (
+                <div className="transaction-row" key={`trade-${item.trade.id}`}>
+                  <Badge>TRADE</Badge>
+                  <div><b>{from?.name} ↔ {to?.name}</b><small>{item.trade.status}</small></div>
+                  <span>{formatDate(item.date)}</span>
+                </div>
+              );
+            }
+            const team = teamById(state, item.waiver.teamId);
+            const added = state.assets.find((asset) => asset.id === item.waiver.addedAssetId);
+            const dropped = state.assets.find((asset) => asset.id === item.waiver.droppedAssetId);
+            return (
+              <div className="transaction-row" key={`waiver-${item.waiver.id}`}>
+                <Badge tone="good">{item.waiver.transactionType}</Badge>
+                <div><b>{team?.name} added {added?.name ?? 'Unknown asset'}</b><small>{dropped ? `Dropped ${dropped.name}` : 'No drop'}</small></div>
+                <span>{formatDate(item.date)}</span>
               </div>
-              <div>
-                <span>{to?.name ?? 'Team'} sends</span>
-                {tradeItemsForSide(state, trade, 'TO').map((item) => <p key={item.id ?? item.assetId ?? item.draftPickId}>{item.label}</p>)}
-              </div>
-            </div>
-            {trade.status === 'PENDING' && trade.toTeamId === teamId && (
-              <div className="inline">
-                <Button onClick={() => run(() => leagueService.acceptTrade(trade.id), setError)}>Accept Trade</Button>
-                <Button kind="ghost" onClick={() => run(() => leagueService.declineTrade(trade.id), setError)}>Decline</Button>
-              </div>
-            )}
+            );
+          })}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function History({ state }) {
+  const finalized = (state.leagueHistory?.seasons ?? []).filter((season) => season.results.length > 0);
+  const allTeamResults = finalized.flatMap((season) => season.results.map((result) => ({ ...result, seasonLabel: season.label })));
+  const allSportResults = state.leagueHistory?.sportResults ?? [];
+
+  const highestSeason = [...allTeamResults].sort((a, b) => b.totalPoints - a.totalPoints)[0];
+  const lowestSeason = [...allTeamResults].sort((a, b) => a.totalPoints - b.totalPoints)[0];
+
+  return (
+    <div className="stack">
+      <Card title="League Champions" icon={Trophy}>
+        {finalized.length === 0 ? (
+          <div className="empty-state"><b>History starts here.</b><span>The first champion will appear after the inaugural season is finalized.</span></div>
+        ) : (
+          <div className="champion-grid">
+            {finalized.map((season) => {
+              const winners = season.results.filter((row) => row.finalRank === 1);
+              return winners.map((winner) => (
+                <div className="champion-card" key={`${season.id}-${winner.teamId}`}>
+                  <span>{season.label}</span><b>{winner.teamName}</b><small>{winner.managerName} · {winner.totalPoints.toLocaleString()} pts</small>
+                </div>
+              ));
+            })}
           </div>
-        );
-      })}
-    </Card>
+        )}
+      </Card>
+      <Card title="Record Book · Season Totals" icon={HistoryIcon}>
+        {highestSeason ? (
+          <div className="record-grid">
+            <div><span>Most points in a season</span><b>{highestSeason.totalPoints.toLocaleString()}</b><small>{highestSeason.teamName} · {highestSeason.seasonLabel}</small></div>
+            <div><span>Lowest points in a season</span><b>{lowestSeason.totalPoints.toLocaleString()}</b><small>{lowestSeason.teamName} · {lowestSeason.seasonLabel}</small></div>
+          </div>
+        ) : <p className="muted">No finalized season totals yet.</p>}
+      </Card>
+      <Card title="Record Book · By Sport" icon={Trophy}>
+        <div className="record-sport-list">
+          {SPORTS.map((sport) => {
+            const rows = allSportResults.filter((row) => row.sport === sport);
+            const high = [...rows].sort((a, b) => b.points - a.points)[0];
+            const low = [...rows].sort((a, b) => a.points - b.points)[0];
+            const highTeam = high ? teamById(state, high.teamId) : null;
+            const lowTeam = low ? teamById(state, low.teamId) : null;
+            return (
+              <div className="record-sport-row" key={sport}>
+                <b>{sport}</b>
+                <div><span>Most</span><strong>{high ? high.points.toLocaleString() : '—'}</strong><small>{high ? `${highTeam?.name ?? 'Historical team'} · ${high.seasonLabel}` : 'No record yet'}</small></div>
+                <div><span>Lowest</span><strong>{low ? low.points.toLocaleString() : '—'}</strong><small>{low ? `${lowTeam?.name ?? 'Historical team'} · ${low.seasonLabel}` : 'No record yet'}</small></div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function Leagues({ state, setPage }) {
+  return (
+    <div className="grid two">
+      <Card title="Your Leagues" icon={Layers3}>
+        <div className="league-list">
+          {(state.availableLeagues ?? []).map((league) => (
+            <div className={`league-row ${league.id === state.league.id ? 'current' : ''}`} key={league.id}>
+              <div>
+                <b>{league.name}</b>
+                <small>{league.role} {league.id === state.league.id ? '· Current league' : ''}</small>
+              </div>
+              {league.id === state.league.id
+                ? <Badge tone="good">ACTIVE</Badge>
+                : <Button kind="ghost" onClick={async () => {
+                    await leagueService.switchLeague(league.id);
+                    setPage('Dashboard');
+                  }}>Switch</Button>}
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card title="Join or Create Another League" icon={Layers3}>
+        <LeagueForms currentSeason={state.league.season} onComplete={() => setPage('Dashboard')} />
+      </Card>
+      <Card title="Current League Code" icon={Database}>
+        <div className="join-code">{state.league.joinCode}</div>
+        <p className="muted">Share this code with anyone you want to invite. Their account can join this league without affecting any other leagues they belong to.</p>
+      </Card>
+    </div>
   );
 }
 
@@ -502,25 +770,14 @@ function Keepers({ state, teamId, setError }) {
   const roster = rosterForTeam(state, teamId);
   const keepers = keeperIdsForTeam(state, teamId);
   return (
-    <Card
-      title={`Keeper Centre · ${keepers.length}/3`}
-      icon={Crown}
-      action={<Badge tone="warn">Deadline {formatDate(state.league.keeperDeadline)}</Badge>}
-    >
+    <Card title={`Keeper Centre · ${keepers.length}/3`} icon={Crown} action={<Badge tone="warn">Deadline {formatDate(state.league.keeperDeadline)}</Badge>}>
       <p className="muted">Keep exactly three assets. Keepers cost no draft picks.</p>
       <div className="keeper-grid">
         {roster.map((membership) => {
           const selected = keepers.includes(membership.assetId);
           return (
-            <button
-              key={membership.assetId}
-              className={`keeper ${selected ? 'selected' : ''}`}
-              onClick={() => run(() => leagueService.toggleKeeper(teamId, membership.assetId), setError)}
-            >
-              <div>
-                <b>{membership.asset.name}</b>
-                <small>{membership.asset.sport} · {membership.asset.seasonPoints} season pts</small>
-              </div>
+            <button key={membership.assetId} className={`keeper ${selected ? 'selected' : ''}`} onClick={() => run(() => leagueService.toggleKeeper(teamId, membership.assetId), setError)}>
+              <div><b>{membership.asset.name}</b><small>{membership.asset.sport} · {membership.asset.seasonPoints} season pts</small></div>
               {selected ? <Crown size={18} /> : <span>Choose</span>}
             </button>
           );
@@ -531,9 +788,7 @@ function Keepers({ state, teamId, setError }) {
 }
 
 function Draft({ state, teamId, setError }) {
-  if (!state.draft) {
-    return <Card title="Live Draft Room" icon={DraftingCompass}><p className="muted">No draft is configured for this season yet.</p></Card>;
-  }
+  if (!state.draft) return <Card title="Live Draft Room" icon={DraftingCompass}><p className="muted">No draft is configured for this season yet.</p></Card>;
 
   const order = draftOrder(state);
   const current = order[state.draft.currentOverallPick - 1];
@@ -545,11 +800,7 @@ function Draft({ state, teamId, setError }) {
 
   return (
     <div className="stack">
-      <Card
-        title="Live Draft Room"
-        icon={DraftingCompass}
-        action={<Badge tone={state.draft.status === DRAFT_STATUS.LIVE ? 'good' : 'warn'}>{state.draft.status}</Badge>}
-      >
+      <Card title="Live Draft Room" icon={DraftingCompass} action={<Badge tone={state.draft.status === DRAFT_STATUS.LIVE ? 'good' : 'warn'}>{state.draft.status}</Badge>}>
         <div className="draft-banner">
           <div>
             <span>ROUND {current?.round ?? '—'} · PICK {state.draft.currentOverallPick}</span>
@@ -558,27 +809,23 @@ function Draft({ state, teamId, setError }) {
           </div>
           <div className="timer">{state.draft.pickTimerSeconds}s</div>
         </div>
+        <p className="muted">Draft date: {formatDate(state.draft.scheduledAt)} · Rosters must finish with one dedicated asset from every sport.</p>
         {state.draft.status === DRAFT_STATUS.LIVE && currentTeam?.id === teamId && (
           <div className="draft-pool">
             {unowned.slice(0, 10).map((asset) => (
               <button key={asset.id} onClick={() => run(() => leagueService.makeDraftPick(asset.id), setError)}>
-                <b>{asset.name}</b>
-                <span>{asset.sport} · {asset.seasonPoints} pts</span>
+                <b>{asset.name}</b><span>{asset.sport} · {previousScore(state, asset)?.points ?? 0} prior pts</span>
               </button>
             ))}
           </div>
         )}
-        {state.draft.status !== DRAFT_STATUS.LIVE && (
-          <p className="muted">Commissioner can start the draft from Commissioner controls.</p>
-        )}
+        {state.draft.status !== DRAFT_STATUS.LIVE && <p className="muted">Commissioner can start the draft from Commissioner controls.</p>}
       </Card>
       <Card title="Recent Picks" icon={Trophy}>
         {state.draft.selections.length
           ? state.draft.selections.slice(-8).reverse().map((selection) => (
               <div className="selection" key={selection.id}>
-                <b>#{selection.overallPick}</b>
-                <span>{state.assets.find((asset) => asset.id === selection.assetId)?.name}</span>
-                <small>{teamById(state, selection.teamId)?.name}</small>
+                <b>#{selection.overallPick}</b><span>{state.assets.find((asset) => asset.id === selection.assetId)?.name}</span><small>{teamById(state, selection.teamId)?.name}</small>
               </div>
             ))
           : <p className="muted">No picks have been made yet.</p>}
@@ -595,6 +842,7 @@ function Commissioner({ state, teamId, setError }) {
     accentColor: state.league.accentColor ?? '#22d3ee',
     themeMode: state.league.themeMode ?? 'dark',
   });
+  const [draftDate, setDraftDate] = useState(toLocalDateTimeInput(state.draft?.scheduledAt));
 
   useEffect(() => {
     setAppearance({
@@ -604,95 +852,40 @@ function Commissioner({ state, teamId, setError }) {
       accentColor: state.league.accentColor ?? '#22d3ee',
       themeMode: state.league.themeMode ?? 'dark',
     });
-  }, [
-    state.league.name,
-    state.league.logoUrl,
-    state.league.primaryColor,
-    state.league.accentColor,
-    state.league.themeMode,
-  ]);
+  }, [state.league.id, state.league.name, state.league.logoUrl, state.league.primaryColor, state.league.accentColor, state.league.themeMode]);
 
-  const setAppearanceField = (field, value) => {
-    setAppearance((current) => ({ ...current, [field]: value }));
-  };
+  useEffect(() => {
+    setDraftDate(toLocalDateTimeInput(state.draft?.scheduledAt));
+  }, [state.draft?.id, state.draft?.scheduledAt]);
+
+  const setAppearanceField = (field, value) => setAppearance((current) => ({ ...current, [field]: value }));
 
   return (
     <div className="grid two">
-      {hostedBackendEnabled && (
-        <Card title="League Appearance" icon={Palette}>
-          <div className="appearance-preview">
-            <div
-              className="appearance-logo"
-              style={{ background: `linear-gradient(145deg, ${appearance.primaryColor}, ${appearance.accentColor})` }}
-            >
-              {appearance.logoUrl ? <img src={appearance.logoUrl} alt="" /> : '10'}
-            </div>
-            <div>
-              <b>{appearance.name || 'Ten Sport Fantasy League'}</b>
-              <small>{appearance.themeMode} theme</small>
-            </div>
+      <Card title="League Appearance" icon={Palette}>
+        <div className="appearance-preview">
+          <div className="appearance-logo" style={{ background: `linear-gradient(145deg, ${appearance.primaryColor}, ${appearance.accentColor})` }}>
+            {appearance.logoUrl ? <img src={appearance.logoUrl} alt="" /> : '10'}
           </div>
-          <div className="appearance-fields">
-            <label>
-              <span>League name</span>
-              <input
-                value={appearance.name}
-                maxLength={80}
-                onChange={(event) => setAppearanceField('name', event.target.value)}
-              />
-            </label>
-            <label>
-              <span>League logo HTTPS URL</span>
-              <input
-                value={appearance.logoUrl}
-                onChange={(event) => setAppearanceField('logoUrl', event.target.value)}
-                placeholder="https://…"
-              />
-            </label>
-            <div className="color-fields">
-              <label>
-                <span>Primary colour</span>
-                <div className="color-input">
-                  <input
-                    type="color"
-                    value={appearance.primaryColor}
-                    onChange={(event) => setAppearanceField('primaryColor', event.target.value)}
-                  />
-                  <code>{appearance.primaryColor}</code>
-                </div>
-              </label>
-              <label>
-                <span>Accent colour</span>
-                <div className="color-input">
-                  <input
-                    type="color"
-                    value={appearance.accentColor}
-                    onChange={(event) => setAppearanceField('accentColor', event.target.value)}
-                  />
-                  <code>{appearance.accentColor}</code>
-                </div>
-              </label>
-            </div>
-            <label>
-              <span>Theme</span>
-              <select
-                value={appearance.themeMode}
-                onChange={(event) => setAppearanceField('themeMode', event.target.value)}
-              >
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-                <option value="system">Follow device</option>
-              </select>
-            </label>
-            <Button onClick={() => run(() => leagueService.updateLeagueAppearance(appearance), setError)}>
-              Save League Appearance
-            </Button>
+          <div><b>{appearance.name || 'Ten Sport Fantasy League'}</b><small>{appearance.themeMode} theme</small></div>
+        </div>
+        <div className="appearance-fields">
+          <label><span>League name</span><input value={appearance.name} maxLength={80} onChange={(e) => setAppearanceField('name', e.target.value)} /></label>
+          <label><span>League logo HTTPS URL</span><input value={appearance.logoUrl} onChange={(e) => setAppearanceField('logoUrl', e.target.value)} placeholder="https://…" /></label>
+          <div className="color-fields">
+            <label><span>Primary colour</span><div className="color-input"><input type="color" value={appearance.primaryColor} onChange={(e) => setAppearanceField('primaryColor', e.target.value)} /><code>{appearance.primaryColor}</code></div></label>
+            <label><span>Accent colour</span><div className="color-input"><input type="color" value={appearance.accentColor} onChange={(e) => setAppearanceField('accentColor', e.target.value)} /><code>{appearance.accentColor}</code></div></label>
           </div>
-        </Card>
-      )}
+          <label><span>Theme</span><select value={appearance.themeMode} onChange={(e) => setAppearanceField('themeMode', e.target.value)}><option value="dark">Dark</option><option value="light">Light</option><option value="system">Follow device</option></select></label>
+          <Button onClick={() => run(() => leagueService.updateLeagueAppearance(appearance), setError)}>Save League Appearance</Button>
+        </div>
+      </Card>
+
       <Card title="Draft Controls" icon={ShieldCheck}>
         {state.draft ? (
           <div className="stack tight">
+            <label className="field-label"><span>Draft date & time</span><input type="datetime-local" value={draftDate} onChange={(e) => setDraftDate(e.target.value)} /></label>
+            <Button kind="ghost" disabled={!draftDate} onClick={() => run(() => leagueService.setDraftSchedule(new Date(draftDate).toISOString()), setError)}>Save Draft Date & Time</Button>
             <div className="detail"><span>Scheduled</span><b>{formatDate(state.draft.scheduledAt)}</b></div>
             <div className="detail"><span>Pick timer</span><b>{state.draft.pickTimerSeconds}s</b></div>
             <div className="inline">
@@ -702,32 +895,41 @@ function Commissioner({ state, teamId, setError }) {
           </div>
         ) : <p className="muted">No draft is configured yet.</p>}
       </Card>
-      <Card title="Future Draft Capital" icon={CalendarDays}>
-        {ownedDraftPicks(state, teamId).slice(0, 8).map((pick) => (
-          <div className="detail" key={pick.id}>
-            <span>{pick.season} Round {pick.round}</span>
-            <b>Originally {teamById(state, pick.originalTeamId)?.managerName}</b>
-          </div>
-        ))}
+
+      <Card title="League Access" icon={Layers3}>
+        <div className="join-code">{state.league.joinCode}</div>
+        <p className="muted">Share this unique code with managers you want to invite.</p>
+        <div className="detail"><span>Managers</span><b>{state.teams.length}</b></div>
       </Card>
-      {hostedBackendEnabled ? (
-        <Card title="Hosted Backend" icon={Database}>
-          <ul className="checklist">
-            <li>Authenticated manager identity</li>
-            <li>Postgres persistence + RLS</li>
-            <li>Realtime league and draft refresh</li>
-            <li>Transactional trade/draft RPCs</li>
-            <li>Team name + photo persistence</li>
-          </ul>
-        </Card>
-      ) : (
-        <Card title="Development Tools" icon={Database}>
-          <p className="muted">Reset restores the local demo league and clears local changes.</p>
-          <Button kind="danger" onClick={() => run(() => leagueService.reset(), setError)}>
-            <RotateCcw size={16} /> Reset Demo Data
-          </Button>
-        </Card>
-      )}
+
+      <Card title="Future Draft Capital" icon={CalendarDays}>
+        {ownedDraftPicks(state, teamId).slice(0, 12).map((pick) => (
+          <div className="detail" key={pick.id}><span>{pick.season} Round {pick.round}</span><b>Originally {teamById(state, pick.originalTeamId)?.managerName}</b></div>
+        ))}
+        {ownedDraftPicks(state, teamId).length === 0 && <p className="muted">Draft picks are generated when the draft date is set.</p>}
+      </Card>
+
+      <Card title="Season Archive" icon={HistoryIcon}>
+        <p className="muted">Finalizing a season locks its standings into League History and updates the Record Book.</p>
+        <Button
+          kind="danger"
+          disabled={state.league.seasonStatus === 'COMPLETE'}
+          onClick={() => {
+            if (window.confirm('Finalize this season? This snapshots the standings into League History.')) {
+              run(() => leagueService.finalizeSeason(), setError);
+            }
+          }}
+        >
+          {state.league.seasonStatus === 'COMPLETE' ? 'Season Finalized' : 'Finalize Season'}
+        </Button>
+      </Card>
+
+      <Card title="Hosted Backend" icon={Database}>
+        <ul className="checklist">
+          <li>Multi-league manager accounts</li><li>Unique league join codes</li><li>Postgres persistence + RLS</li>
+          <li>Realtime roster/transaction refresh</li><li>Historical season snapshots</li><li>Dedicated sport-slot enforcement</li>
+        </ul>
+      </Card>
     </div>
   );
 }
@@ -736,67 +938,77 @@ export default function App() {
   const { state, loading, bootError, reload } = useLeague();
   const [page, setPage] = useState('Dashboard');
   const [error, setError] = useState('');
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
   const isCommissioner = state?.currentRole === 'COMMISSIONER';
 
   useEffect(() => {
-    if (state && !isCommissioner && page === 'Commissioner') setPage('Dashboard');
-  }, [state, isCommissioner, page]);
+    if (state?.league && !isCommissioner && page === 'Commissioner') setPage('Dashboard');
+  }, [state?.league?.id, isCommissioner, page]);
+
+  useEffect(() => {
+    setSelectedTeamId(null);
+    if (state?.league?.id) setPage((current) => current === 'Team' ? 'Dashboard' : current);
+  }, [state?.league?.id]);
 
   if (hostedBackendEnabled && loading && !state) {
-    return <div className="auth-shell"><div className="auth-card"><div className="eyebrow">TEN SPORT</div><h1>Loading league…</h1></div></div>;
+    return <div className="auth-shell"><div className="auth-card"><div className="eyebrow">TEN SPORT</div><h1>Loading…</h1></div></div>;
   }
 
   if (hostedBackendEnabled && !state) {
-    if (bootError?.message === 'Authentication required.') {
-      return <AuthScreen onAuthenticated={reload} />;
-    }
-
+    if (bootError?.message === 'Authentication required.') return <AuthScreen onAuthenticated={reload} />;
     return (
-      <div className="auth-shell">
-        <div className="auth-card">
-          <div className="eyebrow">TEN SPORT</div>
-          <h1>League setup needed</h1>
-          <p className="muted">{bootError?.message ?? 'No hosted league state is available.'}</p>
-          <Button kind="ghost" onClick={() => run(async () => {
-            await signOut();
-            window.location.reload();
-          }, setError)}>
-            <LogOut size={16} /> Sign out
-          </Button>
-          {error && <div className="error">{error}</div>}
-        </div>
-      </div>
+      <div className="auth-shell"><div className="auth-card"><div className="eyebrow">TEN SPORT</div><h1>Something needs attention</h1><p className="muted">{bootError?.message ?? 'No hosted state is available.'}</p></div></div>
     );
   }
 
   if (!state) return null;
+  if (hostedBackendEnabled && state.needsLeague) return <LeagueHub state={state} />;
 
   const teamId = state.currentTeamId;
   const nav = isCommissioner ? NAV : NAV.filter(([label]) => label !== 'Commissioner');
+  const openTeam = (id) => {
+    setSelectedTeamId(id);
+    setPage('Team');
+    setError('');
+  };
 
   const content = {
-    Dashboard: <Dashboard state={state} teamId={teamId} />,
+    Dashboard: <Dashboard state={state} teamId={teamId} onOpenTeam={openTeam} />,
     'My Team': <MyTeam state={state} teamId={teamId} setError={setError} />,
     Assets: <Assets state={state} />,
-    Trades: <Trades state={state} teamId={teamId} setError={setError} />,
+    Transactions: <Transactions state={state} teamId={teamId} setError={setError} />,
+    History: <History state={state} />,
+    Leagues: <Leagues state={state} setPage={setPage} />,
     Keepers: <Keepers state={state} teamId={teamId} setError={setError} />,
     Draft: <Draft state={state} teamId={teamId} setError={setError} />,
     Commissioner: <Commissioner state={state} teamId={teamId} setError={setError} />,
+    Team: <TeamDetail state={state} teamId={selectedTeamId} onBack={() => setPage('Dashboard')} />,
   };
 
   return (
     <div
       className={`app theme-${state.league.themeMode ?? 'dark'}`}
-      style={{
-        '--primary': state.league.primaryColor ?? '#6ee7b7',
-        '--accent': state.league.accentColor ?? '#22d3ee',
-      }}
+      style={{ '--primary': state.league.primaryColor ?? '#6ee7b7', '--accent': state.league.accentColor ?? '#22d3ee' }}
     >
       <aside>
         <div className="brand">
           <div>{state.league.logoUrl ? <img src={state.league.logoUrl} alt="" /> : '10'}</div>
           <span><b>{state.league.name ?? 'TEN SPORT'}</b><small>Ten Sport Fantasy</small></span>
         </div>
+
+        {(state.availableLeagues ?? []).length > 1 && (
+          <select
+            className="league-switcher"
+            value={state.league.id}
+            onChange={async (e) => {
+              await leagueService.switchLeague(e.target.value);
+              setPage('Dashboard');
+            }}
+          >
+            {state.availableLeagues.map((league) => <option key={league.id} value={league.id}>{league.name}</option>)}
+          </select>
+        )}
+
         <nav>
           {nav.map(([label, Icon]) => (
             <button
@@ -804,6 +1016,7 @@ export default function App() {
               className={page === label ? 'active' : ''}
               onClick={() => {
                 setPage(label);
+                setSelectedTeamId(null);
                 setError('');
               }}
             >
@@ -812,27 +1025,17 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.5 LIVE' : 'v0.3 LOCAL'}</Badge>
-          <small>{hostedBackendEnabled ? 'Supabase multi-user mode' : 'Local demo mode'}</small>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.6 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>
       <main>
         <header>
-          <div>
-            <div className="eyebrow">{state.league.season}</div>
-            <h1>{page}</h1>
-          </div>
+          <div><div className="eyebrow">{state.league.season}</div><h1>{page === 'Team' ? teamById(state, selectedTeamId)?.name ?? 'Team' : page}</h1></div>
           <div className="profile">
             <span>{state.currentUser?.displayName ?? 'Manager'}</span>
             <Badge tone="good">{state.currentRole}</Badge>
-            {hostedBackendEnabled && (
-              <Button kind="ghost" onClick={() => run(async () => {
-                await signOut();
-                window.location.reload();
-              }, setError)}>
-                <LogOut size={16} />
-              </Button>
-            )}
+            {hostedBackendEnabled && <Button kind="ghost" onClick={() => run(async () => { await signOut(); window.location.reload(); }, setError)}><LogOut size={16} /></Button>}
           </div>
         </header>
         {error && <div className="error">{error}<button onClick={() => setError('')}>×</button></div>}
