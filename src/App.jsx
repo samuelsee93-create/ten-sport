@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Activity,
   ArrowRightLeft,
@@ -516,6 +516,11 @@ export default function App() {
   const { state, loading, bootError, reload } = useLeague();
   const [page, setPage] = useState('Dashboard');
   const [error, setError] = useState('');
+  const isCommissioner = state?.currentRole === 'COMMISSIONER';
+
+  useEffect(() => {
+    if (state && !isCommissioner && page === 'Commissioner') setPage('Dashboard');
+  }, [state, isCommissioner, page]);
 
   if (hostedBackendEnabled && loading && !state) {
     return <div className="auth-shell"><div className="auth-card"><div className="eyebrow">TEN SPORT</div><h1>Loading league…</h1></div></div>;
@@ -547,21 +552,16 @@ export default function App() {
   if (!state) return null;
 
   const teamId = state.currentTeamId;
-  const isCommissioner = state.currentRole === 'COMMISSIONER';
   const nav = isCommissioner ? NAV : NAV.filter(([label]) => label !== 'Commissioner');
 
-  const content = useMemo(() => ({
+  const content = {
     Dashboard: <Dashboard state={state} teamId={teamId} />,
     'My Team': <MyTeam state={state} teamId={teamId} setError={setError} />,
     Trades: <Trades state={state} teamId={teamId} setError={setError} />,
     Keepers: <Keepers state={state} teamId={teamId} setError={setError} />,
     Draft: <Draft state={state} teamId={teamId} setError={setError} />,
     Commissioner: <Commissioner state={state} teamId={teamId} setError={setError} />,
-  }), [page, state, teamId]);
-
-  useEffect(() => {
-    if (!nav.some(([label]) => label === page)) setPage('Dashboard');
-  }, [isCommissioner]);
+  };
 
   return (
     <div className="app">
