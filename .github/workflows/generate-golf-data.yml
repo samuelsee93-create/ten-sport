@@ -1,0 +1,39 @@
+name: Generate Golf Historical Data
+
+on:
+  push:
+    branches:
+      - feature/v0.4-backend
+    paths:
+      - scripts/generate_golf_data.py
+      - .github/workflows/generate-golf-data.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: feature/v0.4-backend
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate Golf migration and audit report
+        run: python scripts/generate_golf_data.py
+      - name: Commit generated Golf data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add db/migrations/031_golf_top100_and_2026_major_history.sql docs/GOLF_2026_IMPORT_REPORT.json
+          if git diff --cached --quiet; then
+            echo "No generated changes."
+          else
+            git commit -m "Generate Golf top 100 and 2026 major history [skip ci]"
+            git push
+          fi
