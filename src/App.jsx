@@ -338,7 +338,7 @@ function Dashboard({ state, teamId, onOpenTeam }) {
         <ul className="checklist">
           <li>20 assets · all 10 sports must be represented</li>
           <li>15 Active · 5 Bench</li>
-          <li>3 free keepers</li>
+          <li>0–3 escalating-cost keepers</li>
           <li>Asset + draft-pick trades</li>
           <li>Permanent pick provenance</li>
           <li>Multi-league accounts + join codes</li>
@@ -1231,7 +1231,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.9 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.10 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>
