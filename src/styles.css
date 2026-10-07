@@ -250,3 +250,127 @@ select{background:#07131d;border:1px solid #284052;color:#fff;border-radius:10px
 @media(max-width:700px){
   .asset-toolbar-compact{grid-template-columns:1fr}
 }
+
+
+/* v0.11 vertical roster + draft centre */
+.team-roster-table{min-width:900px}
+.draft-tabs{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:16px;
+}
+.draft-tabs button{
+  border:1px solid #284052;
+  background:#07131d;
+  color:#8298aa;
+  border-radius:10px;
+  padding:11px 12px;
+  cursor:pointer;
+  font-weight:800;
+}
+.draft-tabs button.active{
+  background:color-mix(in srgb,var(--primary) 16%,#122330);
+  border-color:color-mix(in srgb,var(--primary) 52%,#284052);
+  color:var(--primary);
+}
+.asset-toolbar-draft{
+  grid-template-columns:minmax(260px,1fr) minmax(150px,220px) minmax(160px,220px);
+}
+.draft-asset-table{min-width:1080px}
+.favorite-button{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border:1px solid #294254;
+  border-radius:9px;
+  background:#0b1a25;
+  color:#8298aa;
+  cursor:pointer;
+}
+.favorite-button:hover,.favorite-button.active{
+  color:#ffd76e;
+  border-color:#6d5a2b;
+  background:#372f15;
+}
+.queue-asset-name{display:flex;align-items:center;gap:9px}
+.queue-actions{display:flex;gap:6px}
+.queue-actions button{
+  width:32px;
+  height:32px;
+  border:1px solid #294254;
+  border-radius:8px;
+  background:#122330;
+  color:#d4e2eb;
+  cursor:pointer;
+}
+.queue-actions button:disabled{opacity:.35;cursor:not-allowed}
+.board-view-toggle{min-width:220px}
+.draft-board-groups{display:grid;gap:18px}
+.draft-board-group{
+  border:1px solid #1d3344;
+  border-radius:14px;
+  padding:14px;
+  background:#07141e;
+}
+.draft-board-group h3{margin:0 0 12px}
+.compact-table{min-width:680px}
+.compact-table th,.compact-table td{padding:9px 11px}
+.draft-team-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.draft-team-card{
+  border:1px solid #1d3344;
+  border-radius:14px;
+  background:#07141e;
+  overflow:hidden;
+}
+.draft-team-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:13px 14px;
+  background:#081520;
+  border-bottom:1px solid #1d3344;
+}
+.draft-team-card-head>div{display:flex;flex-direction:column;gap:2px}
+.draft-team-pick{
+  display:grid;
+  grid-template-columns:90px 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:11px 14px;
+  border-bottom:1px solid #152a39;
+}
+.draft-team-pick:last-child{border-bottom:0}
+.draft-team-pick span,.draft-team-pick small{font-size:11px;color:#8298aa}
+
+.app.theme-light .draft-tabs button,
+.app.theme-light .favorite-button,
+.app.theme-light .queue-actions button,
+.app.theme-light .draft-board-group,
+.app.theme-light .draft-team-card{
+  background:#f6fafb;
+  color:#13202a;
+  border-color:#d3dfe5;
+}
+.app.theme-light .draft-team-card-head{background:#f1f6f8;border-color:#d3dfe5}
+.app.theme-light .draft-tabs button.active{
+  background:color-mix(in srgb,var(--primary) 18%,#eef4f7);
+  color:#13202a;
+}
+
+@media(max-width:900px){
+  .draft-team-grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .asset-toolbar-draft{grid-template-columns:1fr}
+  .draft-tabs{grid-template-columns:1fr}
+  .board-view-toggle{min-width:0}
+  .draft-team-pick{grid-template-columns:75px 1fr}
+  .draft-team-pick small{grid-column:2}
+}
