@@ -994,7 +994,7 @@ function Draft({ state, teamId, setError }) {
   const rosteredIds = new Set(state.rosterMemberships.map((membership) => membership.assetId));
   const sports = [...new Set(state.assets.map((asset) => asset.sport))].sort();
 
-  const ranks = useMemo(() => {
+  const ranks = (() => {
     const base = state.assets.map((asset) => ({
       asset,
       previous: previousScore(state, asset),
@@ -1018,7 +1018,7 @@ function Draft({ state, teamId, setError }) {
         });
     }
     return { overallRankById, sportRankById };
-  }, [state.assets, state.league?.season]);
+  })();
 
   const available = state.assets
     .filter((asset) => !draftedIds.has(asset.id) && !rosteredIds.has(asset.id))
@@ -1251,7 +1251,7 @@ function Draft({ state, teamId, setError }) {
           ) : (
             <div className="empty-state">
               <b>Your queue is empty.</b>
-              <span>Add assets from Draft Pool and drag their priority up or down here.</span>
+              <span>Add assets from Draft Pool and move their priority up or down here.</span>
             </div>
           )}
         </Card>
