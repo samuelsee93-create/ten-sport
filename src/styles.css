@@ -380,3 +380,31 @@ select{background:#07131d;border:1px solid #284052;color:#fff;border-radius:10px
 .asset-toolbar-watch{grid-template-columns:minmax(240px,1fr) repeat(3,minmax(150px,210px))}
 @media(max-width:900px){.asset-toolbar-watch{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.asset-toolbar-watch{grid-template-columns:1fr}}
+
+
+/* clearer multi-league controls */
+.league-sidebar-tools{display:grid;gap:8px;margin:10px 0 14px}
+.league-manage-button{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  width:100%;
+  border:1px dashed #2b4659;
+  border-radius:10px;
+  background:#081720;
+  color:#9fb3c2;
+  padding:10px 11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.league-manage-button:hover{
+  color:var(--primary);
+  border-color:color-mix(in srgb,var(--primary) 55%,#2b4659);
+  background:color-mix(in srgb,var(--primary) 10%,#081720);
+}
+.app.theme-light .league-manage-button{
+  background:#f6fafb;
+  color:#42596a;
+  border-color:#c9d7df;
+}
