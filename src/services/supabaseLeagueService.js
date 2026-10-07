@@ -134,7 +134,7 @@ export class SupabaseLeagueService {
     const availableLeagues = await this.loadAvailableLeagues(user.id);
 
     return {
-      version: 10,
+      version: 11,
       needsLeague: availableLeagues.length === 0,
       currentUserId: user.id,
       currentUser: {
