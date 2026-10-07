@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { hostedBackendEnabled, leagueService } from './services/service.js';
 import { signIn, signOut, signUp } from './services/authService.js';
+import { loadAssetWatchlist, setAssetWatched } from './services/watchlistService.js';
 import { DRAFT_STATUS, LINEUP_STATUS, SPORTS } from './domain/constants.js';
 import {
   activeRosterForTeam,
@@ -570,12 +571,30 @@ function Assets({ state }) {
   const [query, setQuery] = useState('');
   const [sport, setSport] = useState('ALL');
   const [availability, setAvailability] = useState('ALL');
+  const [watchFilter, setWatchFilter] = useState('ALL');
+  const [watchListIds, setWatchListIds] = useState([]);
+  const [watchError, setWatchError] = useState('');
   const [sort, setSort] = useState({ key: 'POINTS', direction: 'DESC' });
 
   const sports = [...new Set(state.assets.map((asset) => asset.sport))].sort();
   const ownershipByAsset = Object.fromEntries(
     state.rosterMemberships.map((membership) => [membership.assetId, membership.teamId])
   );
+
+  const watchedSet = useMemo(() => new Set(watchListIds), [watchListIds]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setWatchError('');
+    loadAssetWatchlist({ leagueId: state.league.id, userId: state.currentUserId })
+      .then((assetIds) => {
+        if (!cancelled) setWatchListIds(assetIds);
+      })
+      .catch((error) => {
+        if (!cancelled) setWatchError(error.message || 'Unable to load watch list.');
+      });
+    return () => { cancelled = true; };
+  }, [state.league.id, state.currentUserId]);
 
   const rankedAssets = useMemo(() => {
     const base = state.assets.map((asset) => ({
@@ -626,6 +645,27 @@ function Assets({ state }) {
 
   const direction = sort.direction === 'ASC' ? 1 : -1;
 
+  const toggleWatch = async (assetId) => {
+    const wasWatched = watchedSet.has(assetId);
+    const optimistic = wasWatched
+      ? watchListIds.filter((id) => id !== assetId)
+      : [...watchListIds, assetId];
+    setWatchListIds(optimistic);
+    setWatchError('');
+    try {
+      const next = await setAssetWatched({
+        leagueId: state.league.id,
+        userId: state.currentUserId,
+        assetId,
+        watched: !wasWatched,
+      });
+      setWatchListIds(next);
+    } catch (error) {
+      setWatchListIds(watchListIds);
+      setWatchError(error.message || 'Unable to update watch list.');
+    }
+  };
+
   const rows = state.assets
     .map((asset) => {
       const previous = previousScore(state, asset);
@@ -638,17 +678,19 @@ function Assets({ state }) {
         previousPoints: previous?.points ?? 0,
         overallRank: rankedAssets.overallRankById[asset.id] ?? Number.MAX_SAFE_INTEGER,
         sportRank: rankedAssets.sportRankById[asset.id] ?? Number.MAX_SAFE_INTEGER,
+        watched: watchedSet.has(asset.id),
         status: owner ? 'ROSTERED' : 'AVAILABLE',
       };
     })
-    .filter(({ asset, owner }) => {
+    .filter(({ asset, owner, watched }) => {
       const matchesQuery = !query.trim()
         || asset.name.toLowerCase().includes(query.trim().toLowerCase());
       const matchesSport = sport === 'ALL' || asset.sport === sport;
       const matchesAvailability = availability === 'ALL'
         || (availability === 'AVAILABLE' && !owner)
         || (availability === 'ROSTERED' && !!owner);
-      return matchesQuery && matchesSport && matchesAvailability;
+      const matchesWatch = watchFilter === 'ALL' || watched;
+      return matchesQuery && matchesSport && matchesAvailability && matchesWatch;
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -666,6 +708,10 @@ function Assets({ state }) {
       } else if (sort.key === 'STATUS') {
         comparison = a.status.localeCompare(b.status)
           || (a.owner?.name ?? '').localeCompare(b.owner?.name ?? '')
+          || a.asset.name.localeCompare(b.asset.name);
+      } else if (sort.key === 'WATCH') {
+        comparison = Number(a.watched) - Number(b.watched)
+          || b.previousPoints - a.previousPoints
           || a.asset.name.localeCompare(b.asset.name);
       }
 
@@ -687,12 +733,12 @@ function Assets({ state }) {
   );
 
   return (
-    <Card title="Draftable Assets" icon={List} action={<Badge>{state.assets.length} assets</Badge>}>
+    <Card title="Draftable Assets" icon={List} action={<div className="inline"><Badge>{state.assets.length} assets</Badge><Badge tone="warn">{watchListIds.length} watched</Badge></div>}>
       <p className="muted">
         Previous-season points use the Ten Sport v1.2 model. Rank is shown as overall rank across every draftable asset, followed by rank within that sport.
       </p>
 
-      <div className="asset-toolbar asset-toolbar-compact">
+      <div className="asset-toolbar asset-toolbar-compact asset-toolbar-watch">
         <label className="search-box">
           <Search size={16} />
           <input
@@ -712,7 +758,14 @@ function Assets({ state }) {
           <option value="AVAILABLE">Available only</option>
           <option value="ROSTERED">Rostered only</option>
         </select>
+
+        <select value={watchFilter} onChange={(e) => setWatchFilter(e.target.value)}>
+          <option value="ALL">All watch statuses</option>
+          <option value="WATCHED">My Watch List only</option>
+        </select>
       </div>
+
+      {watchError && <div className="error">{watchError}</div>}
 
       {state.assets.length === 0 ? (
         <div className="empty-state">
@@ -724,6 +777,7 @@ function Assets({ state }) {
           <table className="asset-table">
             <thead>
               <tr>
+                <SortHeader sortKey="WATCH" defaultDirection="DESC">Watch</SortHeader>
                 <SortHeader sortKey="NAME">Asset</SortHeader>
                 <SortHeader sortKey="SPORT">Sport</SortHeader>
                 <th>Previous Season</th>
@@ -733,8 +787,17 @@ function Assets({ state }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ asset, previous, owner, previousPoints, overallRank, sportRank }) => (
+              {rows.map(({ asset, previous, owner, previousPoints, overallRank, sportRank, watched }) => (
                 <tr key={asset.id}>
+                  <td>
+                    <button
+                      className={`favorite-button ${watched ? 'active' : ''}`}
+                      title={watched ? 'Remove from Watch List' : 'Add to Watch List'}
+                      onClick={() => toggleWatch(asset.id)}
+                    >
+                      <Star size={17} fill={watched ? 'currentColor' : 'none'} />
+                    </button>
+                  </td>
                   <td><b>{asset.name}</b></td>
                   <td><Badge>{asset.sport}</Badge></td>
                   <td>{previous?.seasonLabel ?? '—'}</td>
@@ -1590,7 +1653,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.11 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.12 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>

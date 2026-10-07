@@ -374,3 +374,9 @@ select{background:#07131d;border:1px solid #284052;color:#fff;border-radius:10px
   .draft-team-pick{grid-template-columns:75px 1fr}
   .draft-team-pick small{grid-column:2}
 }
+
+
+/* v0.12 asset watch list */
+.asset-toolbar-watch{grid-template-columns:minmax(240px,1fr) repeat(3,minmax(150px,210px))}
+@media(max-width:900px){.asset-toolbar-watch{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.asset-toolbar-watch{grid-template-columns:1fr}}
