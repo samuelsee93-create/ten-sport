@@ -1624,7 +1624,7 @@ export default function App() {
           <span><b>{state.league.name ?? 'TEN SPORT'}</b><small>Ten Sport Fantasy</small></span>
         </div>
 
-        {(state.availableLeagues ?? []).length > 1 && (
+        <div className="league-sidebar-tools">
           <select
             className="league-switcher"
             value={state.league.id}
@@ -1633,9 +1633,21 @@ export default function App() {
               setPage('Dashboard');
             }}
           >
-            {state.availableLeagues.map((league) => <option key={league.id} value={league.id}>{league.name}</option>)}
+            {(state.availableLeagues ?? []).map((league) => (
+              <option key={league.id} value={league.id}>{league.name}</option>
+            ))}
           </select>
-        )}
+          <button
+            className="league-manage-button"
+            onClick={() => {
+              setPage('Leagues');
+              setSelectedTeamId(null);
+              setError('');
+            }}
+          >
+            <Layers3 size={16} /> + Create / Join League
+          </button>
+        </div>
 
         <nav>
           {nav.map(([label, Icon]) => (
