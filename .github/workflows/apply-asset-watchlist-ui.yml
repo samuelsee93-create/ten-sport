@@ -1,0 +1,39 @@
+name: Apply Asset Watch List UI
+
+on:
+  push:
+    branches:
+      - feature/v0.4-backend
+    paths:
+      - scripts/apply_asset_watchlist_ui.py
+      - .github/workflows/apply-asset-watchlist-ui.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: feature/v0.4-backend
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Apply watch-list UI patch
+        run: python scripts/apply_asset_watchlist_ui.py
+      - name: Commit generated UI changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.jsx src/styles.css package.json
+          if git diff --cached --quiet; then
+            echo "No generated changes."
+          else
+            git commit -m "Add persistent asset watch list [skip ci]"
+            git push
+          fi
