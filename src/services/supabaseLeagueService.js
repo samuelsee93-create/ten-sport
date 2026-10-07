@@ -334,7 +334,7 @@ export class SupabaseLeagueService {
       (row) => row.id !== season.id && row.status === 'COMPLETE'
     ) ?? null;
 
-    const [teamHistory, sportHistory, draftOrderRows, previousRoster] = await Promise.all([
+    const [teamHistory, sportHistory, draftOrderRows, previousRoster, draftPreferences] = await Promise.all([
       selectIn('season_team_results', '*', 'season_id', seasons.map((row) => row.id)),
       selectIn('season_sport_results', '*', 'season_id', seasons.map((row) => row.id)),
       draft
@@ -351,6 +351,17 @@ export class SupabaseLeagueService {
               .eq('season_id', previousCompletedSeason.id)
               .eq('team_id', team.id),
             'Load keeper-eligible roster'
+          ) ?? []
+        : [],
+      draft
+        ? unwrap(
+            await c
+              .from('draft_preferences')
+              .select('*')
+              .eq('draft_id', draft.id)
+              .eq('user_id', user.id)
+              .order('queue_position', { ascending: true, nullsFirst: false }),
+            'Load draft preferences'
           ) ?? []
         : [],
     ]);
@@ -603,6 +614,13 @@ export class SupabaseLeagueService {
               selectionType: row.selection_type ?? 'DRAFT',
               createdAt: row.selected_at,
             })),
+            preferences: draftPreferences.map((row) => ({
+              id: row.id,
+              assetId: row.asset_id,
+              starred: row.starred,
+              queuePosition: row.queue_position,
+              updatedAt: row.updated_at,
+            })),
           }
         : null,
       leagueHistory,
@@ -655,6 +673,22 @@ export class SupabaseLeagueService {
       p_primary_color: primaryColor,
       p_accent_color: accentColor,
       p_theme_mode: themeMode,
+    });
+    if (error) throw error;
+    return this.refresh();
+  }
+
+  async renameLeague(name) {
+    const state = this.requireState();
+    const clean = name.trim();
+    if (!clean) throw new Error('League name cannot be empty.');
+    const { error } = await client().rpc('update_league_appearance', {
+      p_league_id: state.league.id,
+      p_name: clean,
+      p_logo_url: state.league.logoUrl,
+      p_primary_color: state.league.primaryColor,
+      p_accent_color: state.league.accentColor,
+      p_theme_mode: state.league.themeMode,
     });
     if (error) throw error;
     return this.refresh();
@@ -774,6 +808,75 @@ export class SupabaseLeagueService {
       p_season_id: state.league.seasonId,
     });
     if (error) throw error;
+    return this.refresh();
+  }
+
+  async setDraftFavorite(assetId, starred) {
+    const state = this.requireState();
+    if (!state.draft?.id) throw new Error('No draft is configured for this season.');
+    const existing = state.draft.preferences?.find((row) => row.assetId === assetId);
+    const { error } = await client().from('draft_preferences').upsert({
+      draft_id: state.draft.id,
+      user_id: state.currentUserId,
+      asset_id: assetId,
+      starred,
+      queue_position: existing?.queuePosition ?? null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'draft_id,user_id,asset_id' });
+    if (error) throw error;
+    return this.refresh();
+  }
+
+  async toggleDraftQueue(assetId) {
+    const state = this.requireState();
+    if (!state.draft?.id) throw new Error('No draft is configured for this season.');
+    const existing = state.draft.preferences?.find((row) => row.assetId === assetId);
+    const queued = (state.draft.preferences ?? []).filter((row) => row.queuePosition != null);
+    const nextPosition = existing?.queuePosition != null
+      ? null
+      : Math.max(0, ...queued.map((row) => row.queuePosition ?? 0)) + 1;
+
+    const { error } = await client().from('draft_preferences').upsert({
+      draft_id: state.draft.id,
+      user_id: state.currentUserId,
+      asset_id: assetId,
+      starred: existing?.starred ?? false,
+      queue_position: nextPosition,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'draft_id,user_id,asset_id' });
+    if (error) throw error;
+    return this.refresh();
+  }
+
+  async moveDraftQueue(assetId, direction) {
+    const state = this.requireState();
+    if (!state.draft?.id) throw new Error('No draft is configured for this season.');
+    const queued = (state.draft.preferences ?? [])
+      .filter((row) => row.queuePosition != null)
+      .slice()
+      .sort((a, b) => a.queuePosition - b.queuePosition);
+    const index = queued.findIndex((row) => row.assetId === assetId);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= queued.length) return state;
+
+    const current = queued[index];
+    const target = queued[targetIndex];
+    const nowIso = new Date().toISOString();
+
+    const [first, second] = await Promise.all([
+      client().from('draft_preferences')
+        .update({ queue_position: target.queuePosition, updated_at: nowIso })
+        .eq('draft_id', state.draft.id)
+        .eq('user_id', state.currentUserId)
+        .eq('asset_id', current.assetId),
+      client().from('draft_preferences')
+        .update({ queue_position: current.queuePosition, updated_at: nowIso })
+        .eq('draft_id', state.draft.id)
+        .eq('user_id', state.currentUserId)
+        .eq('asset_id', target.assetId),
+    ]);
+    if (first.error) throw first.error;
+    if (second.error) throw second.error;
     return this.refresh();
   }
 
