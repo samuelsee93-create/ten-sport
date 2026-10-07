@@ -14,6 +14,7 @@ import {
   Palette,
   Search,
   ShieldCheck,
+  Star,
   Trophy,
   Users,
 } from 'lucide-react';
@@ -390,26 +391,18 @@ function MyTeam({ state, teamId, setError }) {
     return <Card title="My Team" icon={Users}><p className="muted">No team is assigned to this account yet.</p></Card>;
   }
 
-  const row = (membership, status) => (
-    <div className="asset-row" key={membership.assetId}>
-      <div>
-        <div className="asset-name">{membership.asset.name} <Badge>{membership.asset.sport}</Badge></div>
-        <small>{membership.asset.sport} · Season {membership.asset.seasonPoints} · For You {membership.asset.pointsForTeam}</small>
-      </div>
-      <Button
-        kind={status === LINEUP_STATUS.ACTIVE ? 'ghost' : 'primary'}
-        onClick={() => run(
-          () => leagueService.setLineupStatus(
-            teamId,
-            membership.assetId,
-            status === LINEUP_STATUS.ACTIVE ? LINEUP_STATUS.BENCH : LINEUP_STATUS.ACTIVE
-          ),
-          setError
-        )}
-      >
-        {status === LINEUP_STATUS.ACTIVE ? 'Bench' : 'Activate'}
-      </Button>
-    </div>
+  const roster = [...active, ...bench].map((membership) => ({
+    ...membership,
+    previous: previousScore(state, membership.asset),
+  }));
+
+  const toggleLineup = (membership) => run(
+    () => leagueService.setLineupStatus(
+      teamId,
+      membership.assetId,
+      membership.lineupStatus === LINEUP_STATUS.ACTIVE ? LINEUP_STATUS.BENCH : LINEUP_STATUS.ACTIVE
+    ),
+    setError
   );
 
   return (
@@ -433,17 +426,66 @@ function MyTeam({ state, teamId, setError }) {
           </div>
         </div>
       </Card>
+
       <Card title="Sport Coverage" icon={List}>
         <SportCoverage state={state} teamId={teamId} />
       </Card>
-      <div className="grid two">
-        <Card title={`Active · ${active.length}/15`} icon={Activity}>
-          {active.length ? active.map((membership) => row(membership, LINEUP_STATUS.ACTIVE)) : <p className="muted">No active assets yet.</p>}
-        </Card>
-        <Card title={`Bench · ${bench.length}/5`} icon={Users}>
-          {bench.length ? bench.map((membership) => row(membership, LINEUP_STATUS.BENCH)) : <p className="muted">No benched assets yet.</p>}
-        </Card>
-      </div>
+
+      <Card
+        title={`Roster · ${roster.length}/20`}
+        icon={Activity}
+        action={
+          <div className="inline">
+            <Badge tone="good">{active.length}/15 Active</Badge>
+            <Badge>{bench.length}/5 Bench</Badge>
+          </div>
+        }
+      >
+        {roster.length ? (
+          <div className="asset-table-wrap">
+            <table className="asset-table team-roster-table">
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>Sport</th>
+                  <th className="numeric">Points For You</th>
+                  <th className="numeric">Previous Season</th>
+                  <th>Lineup</th>
+                  <th>Move</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roster.map((membership) => (
+                  <tr key={membership.assetId}>
+                    <td><b>{membership.asset.name}</b></td>
+                    <td><Badge>{membership.asset.sport}</Badge></td>
+                    <td className="numeric">{Number(membership.asset.pointsForTeam ?? 0).toLocaleString()}</td>
+                    <td className="numeric">{membership.previous ? membership.previous.points.toLocaleString() : '—'}</td>
+                    <td>
+                      <Badge tone={membership.lineupStatus === LINEUP_STATUS.ACTIVE ? 'good' : 'neutral'}>
+                        {membership.lineupStatus}
+                      </Badge>
+                    </td>
+                    <td>
+                      <Button
+                        kind={membership.lineupStatus === LINEUP_STATUS.ACTIVE ? 'ghost' : 'primary'}
+                        onClick={() => toggleLineup(membership)}
+                      >
+                        {membership.lineupStatus === LINEUP_STATUS.ACTIVE ? 'Bench' : 'Activate'}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <b>Your roster is empty.</b>
+            <span>Drafted and acquired assets will appear here in one vertical roster view.</span>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
@@ -932,19 +974,148 @@ function Keepers({ state, teamId, setError }) {
 }
 
 function Draft({ state, teamId, setError }) {
-  if (!state.draft) return <Card title="Live Draft Room" icon={DraftingCompass}><p className="muted">No draft is configured for this season yet.</p></Card>;
+  const [tab, setTab] = useState('POOL');
+  const [boardView, setBoardView] = useState('ROUND');
+  const [query, setQuery] = useState('');
+  const [sportFilter, setSportFilter] = useState('ALL');
+  const [preferenceFilter, setPreferenceFilter] = useState('ALL');
+  const [sort, setSort] = useState({ key: 'POINTS', direction: 'DESC' });
+
+  if (!state.draft) {
+    return <Card title="Live Draft Room" icon={DraftingCompass}><p className="muted">No draft is configured for this season yet.</p></Card>;
+  }
 
   const order = draftOrder(state);
   const current = order[state.draft.currentOverallPick - 1];
   const currentTeam = current ? teamById(state, current.currentTeamId) : null;
-  const unowned = state.assets.filter(
-    (asset) => !state.rosterMemberships.some((m) => m.assetId === asset.id)
-      && !state.draft.selections.some((selection) => selection.assetId === asset.id)
+  const preferences = state.draft.preferences ?? [];
+  const preferenceByAsset = Object.fromEntries(preferences.map((row) => [row.assetId, row]));
+  const draftedIds = new Set(state.draft.selections.map((selection) => selection.assetId));
+  const rosteredIds = new Set(state.rosterMemberships.map((membership) => membership.assetId));
+  const sports = [...new Set(state.assets.map((asset) => asset.sport))].sort();
+
+  const ranks = useMemo(() => {
+    const base = state.assets.map((asset) => ({
+      asset,
+      previous: previousScore(state, asset),
+    }));
+    const overall = [...base].sort((a, b) =>
+      (b.previous?.points ?? 0) - (a.previous?.points ?? 0)
+      || a.asset.sport.localeCompare(b.asset.sport)
+      || a.asset.name.localeCompare(b.asset.name)
+    );
+    const overallRankById = Object.fromEntries(overall.map((row, index) => [row.asset.id, index + 1]));
+    const sportRankById = {};
+    for (const sport of [...new Set(base.map((row) => row.asset.sport))]) {
+      base
+        .filter((row) => row.asset.sport === sport)
+        .sort((a, b) =>
+          (b.previous?.points ?? 0) - (a.previous?.points ?? 0)
+          || a.asset.name.localeCompare(b.asset.name)
+        )
+        .forEach((row, index) => {
+          sportRankById[row.asset.id] = index + 1;
+        });
+    }
+    return { overallRankById, sportRankById };
+  }, [state.assets, state.league?.season]);
+
+  const available = state.assets
+    .filter((asset) => !draftedIds.has(asset.id) && !rosteredIds.has(asset.id))
+    .map((asset) => {
+      const previous = previousScore(state, asset);
+      const preference = preferenceByAsset[asset.id] ?? null;
+      return {
+        asset,
+        previous,
+        previousPoints: previous?.points ?? 0,
+        preference,
+        overallRank: ranks.overallRankById[asset.id] ?? Number.MAX_SAFE_INTEGER,
+        sportRank: ranks.sportRankById[asset.id] ?? Number.MAX_SAFE_INTEGER,
+      };
+    });
+
+  const direction = sort.direction === 'ASC' ? 1 : -1;
+  const poolRows = available
+    .filter(({ asset, preference }) => {
+      const matchesQuery = !query.trim() || asset.name.toLowerCase().includes(query.trim().toLowerCase());
+      const matchesSport = sportFilter === 'ALL' || asset.sport === sportFilter;
+      const matchesPreference = preferenceFilter === 'ALL'
+        || (preferenceFilter === 'FAVORITES' && preference?.starred)
+        || (preferenceFilter === 'QUEUED' && preference?.queuePosition != null);
+      return matchesQuery && matchesSport && matchesPreference;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      if (sort.key === 'NAME') comparison = a.asset.name.localeCompare(b.asset.name);
+      if (sort.key === 'SPORT') comparison = a.asset.sport.localeCompare(b.asset.sport) || a.asset.name.localeCompare(b.asset.name);
+      if (sort.key === 'POINTS') comparison = a.previousPoints - b.previousPoints || b.asset.name.localeCompare(a.asset.name);
+      if (sort.key === 'RANK') comparison = a.overallRank - b.overallRank;
+      return comparison * direction;
+    });
+
+  const queueRows = preferences
+    .filter((row) => row.queuePosition != null)
+    .slice()
+    .sort((a, b) => a.queuePosition - b.queuePosition)
+    .map((preference) => {
+      const asset = state.assets.find((row) => row.id === preference.assetId);
+      if (!asset || draftedIds.has(asset.id) || rosteredIds.has(asset.id)) return null;
+      const previous = previousScore(state, asset);
+      return {
+        preference,
+        asset,
+        previous,
+        previousPoints: previous?.points ?? 0,
+        overallRank: ranks.overallRankById[asset.id] ?? Number.MAX_SAFE_INTEGER,
+        sportRank: ranks.sportRankById[asset.id] ?? Number.MAX_SAFE_INTEGER,
+      };
+    })
+    .filter(Boolean);
+
+  const changeSort = (key, defaultDirection = 'ASC') => {
+    setSort((currentSort) => ({
+      key,
+      direction: currentSort.key === key
+        ? (currentSort.direction === 'ASC' ? 'DESC' : 'ASC')
+        : defaultDirection,
+    }));
+  };
+
+  const sortIndicator = (key) => {
+    if (sort.key !== key) return '↕';
+    return sort.direction === 'ASC' ? '↑' : '↓';
+  };
+
+  const SortHeader = ({ sortKey, children, defaultDirection = 'ASC', numeric = false }) => (
+    <th className={numeric ? 'numeric' : ''}>
+      <button
+        type="button"
+        className={`sort-header ${sort.key === sortKey ? 'active' : ''}`}
+        onClick={() => changeSort(sortKey, defaultDirection)}
+      >
+        <span>{children}</span><span className="sort-indicator">{sortIndicator(sortKey)}</span>
+      </button>
+    </th>
   );
+
+  const selectionRows = state.draft.selections
+    .map((selection) => ({
+      ...selection,
+      asset: state.assets.find((asset) => asset.id === selection.assetId),
+      team: teamById(state, selection.teamId),
+    }))
+    .sort((a, b) => a.overallPick - b.overallPick);
+
+  const canDraft = state.draft.status === DRAFT_STATUS.LIVE && currentTeam?.id === teamId;
 
   return (
     <div className="stack">
-      <Card title="Live Draft Room" icon={DraftingCompass} action={<Badge tone={state.draft.status === DRAFT_STATUS.LIVE ? 'good' : 'warn'}>{state.draft.status}</Badge>}>
+      <Card
+        title="Draft Centre"
+        icon={DraftingCompass}
+        action={<Badge tone={state.draft.status === DRAFT_STATUS.LIVE ? 'good' : 'warn'}>{state.draft.status}</Badge>}
+      >
         <div className="draft-banner">
           <div>
             <span>ROUND {current?.round ?? '—'} · PICK {state.draft.currentOverallPick}</span>
@@ -953,27 +1124,206 @@ function Draft({ state, teamId, setError }) {
           </div>
           <div className="timer">{state.draft.pickTimerSeconds}s</div>
         </div>
-        <p className="muted">Draft date: {formatDate(state.draft.scheduledAt)} · 20-round snake draft · finished rosters must represent all 10 sports.</p>
-        {state.draft.status === DRAFT_STATUS.LIVE && currentTeam?.id === teamId && (
-          <div className="draft-pool">
-            {unowned.slice(0, 10).map((asset) => (
-              <button key={asset.id} onClick={() => run(() => leagueService.makeDraftPick(asset.id), setError)}>
-                <b>{asset.name}</b><span>{asset.sport} · {previousScore(state, asset)?.points ?? 0} prior pts</span>
-              </button>
-            ))}
+        <p className="muted">
+          Draft date: {formatDate(state.draft.scheduledAt)} · 20-round snake draft · finished rosters must represent all 10 sports.
+        </p>
+
+        <div className="draft-tabs">
+          <button className={tab === 'POOL' ? 'active' : ''} onClick={() => setTab('POOL')}>Draft Pool</button>
+          <button className={tab === 'QUEUE' ? 'active' : ''} onClick={() => setTab('QUEUE')}>My Queue ({queueRows.length})</button>
+          <button className={tab === 'BOARD' ? 'active' : ''} onClick={() => setTab('BOARD')}>Draft Board ({selectionRows.length})</button>
+        </div>
+      </Card>
+
+      {tab === 'POOL' && (
+        <Card title="Available Assets" icon={List} action={<Badge>{available.length} available</Badge>}>
+          <div className="asset-toolbar asset-toolbar-draft">
+            <label className="search-box">
+              <Search size={16} />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Filter asset name…" />
+            </label>
+            <select value={sportFilter} onChange={(e) => setSportFilter(e.target.value)}>
+              <option value="ALL">All sports</option>
+              {sports.map((sport) => <option key={sport} value={sport}>{sport}</option>)}
+            </select>
+            <select value={preferenceFilter} onChange={(e) => setPreferenceFilter(e.target.value)}>
+              <option value="ALL">All available</option>
+              <option value="FAVORITES">Favorites only</option>
+              <option value="QUEUED">Queued only</option>
+            </select>
           </div>
-        )}
-        {state.draft.status !== DRAFT_STATUS.LIVE && <p className="muted">Commissioner can start the draft from Commissioner controls.</p>}
-      </Card>
-      <Card title="Recent Picks" icon={Trophy}>
-        {state.draft.selections.length
-          ? state.draft.selections.slice(-8).reverse().map((selection) => (
-              <div className="selection" key={selection.id}>
-                <b>#{selection.overallPick}</b><span>{state.assets.find((asset) => asset.id === selection.assetId)?.name}</span><small>{teamById(state, selection.teamId)?.name}{selection.selectionType === 'KEEPER' ? ' · KEEPER' : ''}</small>
-              </div>
-            ))
-          : <p className="muted">No picks have been made yet.</p>}
-      </Card>
+
+          <div className="asset-table-wrap">
+            <table className="asset-table draft-asset-table">
+              <thead>
+                <tr>
+                  <th>★</th>
+                  <SortHeader sortKey="NAME">Asset</SortHeader>
+                  <SortHeader sortKey="SPORT">Sport</SortHeader>
+                  <th>Previous</th>
+                  <SortHeader sortKey="POINTS" defaultDirection="DESC" numeric>Points</SortHeader>
+                  <SortHeader sortKey="RANK" numeric>Rank</SortHeader>
+                  <th>Queue</th>
+                  <th>Draft</th>
+                </tr>
+              </thead>
+              <tbody>
+                {poolRows.map(({ asset, previous, previousPoints, preference, overallRank, sportRank }) => (
+                  <tr key={asset.id}>
+                    <td>
+                      <button
+                        className={`favorite-button ${preference?.starred ? 'active' : ''}`}
+                        title={preference?.starred ? 'Remove favorite' : 'Favorite'}
+                        onClick={() => run(() => leagueService.setDraftFavorite(asset.id, !preference?.starred), setError)}
+                      >
+                        <Star size={17} fill={preference?.starred ? 'currentColor' : 'none'} />
+                      </button>
+                    </td>
+                    <td><b>{asset.name}</b></td>
+                    <td><Badge>{asset.sport}</Badge></td>
+                    <td>{previous?.seasonLabel ?? '—'}</td>
+                    <td className="numeric">{previousPoints.toLocaleString()}</td>
+                    <td className="numeric rank-cell">#{overallRank} <span>({asset.sport} #{sportRank})</span></td>
+                    <td>
+                      <Button
+                        kind={preference?.queuePosition != null ? 'primary' : 'ghost'}
+                        onClick={() => run(() => leagueService.toggleDraftQueue(asset.id), setError)}
+                      >
+                        {preference?.queuePosition != null ? `Queued #${preference.queuePosition}` : '+ Queue'}
+                      </Button>
+                    </td>
+                    <td>
+                      {canDraft
+                        ? <Button onClick={() => run(() => leagueService.makeDraftPick(asset.id), setError)}>Draft</Button>
+                        : <span className="muted">—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {tab === 'QUEUE' && (
+        <Card
+          title="My Draft Queue"
+          icon={Star}
+          action={<Badge>{queueRows.length} queued</Badge>}
+        >
+          <p className="muted">Private to you. Queue order is a priority list only — it does not auto-draft an asset.</p>
+          {queueRows.length ? (
+            <div className="asset-table-wrap">
+              <table className="asset-table">
+                <thead>
+                  <tr><th>#</th><th>Asset</th><th>Sport</th><th className="numeric">Points</th><th className="numeric">Rank</th><th>Priority</th><th>Remove</th></tr>
+                </thead>
+                <tbody>
+                  {queueRows.map((row, index) => (
+                    <tr key={row.asset.id}>
+                      <td><b>{index + 1}</b></td>
+                      <td>
+                        <div className="queue-asset-name">
+                          <button
+                            className={`favorite-button ${row.preference.starred ? 'active' : ''}`}
+                            onClick={() => run(() => leagueService.setDraftFavorite(row.asset.id, !row.preference.starred), setError)}
+                          >
+                            <Star size={16} fill={row.preference.starred ? 'currentColor' : 'none'} />
+                          </button>
+                          <b>{row.asset.name}</b>
+                        </div>
+                      </td>
+                      <td><Badge>{row.asset.sport}</Badge></td>
+                      <td className="numeric">{row.previousPoints.toLocaleString()}</td>
+                      <td className="numeric rank-cell">#{row.overallRank} <span>({row.asset.sport} #{row.sportRank})</span></td>
+                      <td>
+                        <div className="queue-actions">
+                          <button disabled={index === 0} onClick={() => run(() => leagueService.moveDraftQueue(row.asset.id, -1), setError)}>↑</button>
+                          <button disabled={index === queueRows.length - 1} onClick={() => run(() => leagueService.moveDraftQueue(row.asset.id, 1), setError)}>↓</button>
+                        </div>
+                      </td>
+                      <td><Button kind="ghost" onClick={() => run(() => leagueService.toggleDraftQueue(row.asset.id), setError)}>Remove</Button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <b>Your queue is empty.</b>
+              <span>Add assets from Draft Pool and drag their priority up or down here.</span>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {tab === 'BOARD' && (
+        <Card
+          title="Draft Board"
+          icon={Trophy}
+          action={
+            <div className="segmented board-view-toggle">
+              <button className={boardView === 'ROUND' ? 'active' : ''} onClick={() => setBoardView('ROUND')}>By Round</button>
+              <button className={boardView === 'TEAM' ? 'active' : ''} onClick={() => setBoardView('TEAM')}>By Team</button>
+            </div>
+          }
+        >
+          {selectionRows.length === 0 ? (
+            <div className="empty-state"><b>No picks yet.</b><span>The full board will populate as the draft runs.</span></div>
+          ) : boardView === 'ROUND' ? (
+            <div className="draft-board-groups">
+              {Array.from({ length: state.draft.rounds }, (_, index) => index + 1).map((round) => {
+                const picks = selectionRows.filter((selection) => selection.round === round);
+                if (!picks.length && state.draft.status !== DRAFT_STATUS.COMPLETE) return null;
+                return (
+                  <section className="draft-board-group" key={round}>
+                    <h3>Round {round}</h3>
+                    {picks.length ? (
+                      <div className="asset-table-wrap">
+                        <table className="asset-table compact-table">
+                          <thead><tr><th>Overall</th><th>Team</th><th>Asset</th><th>Sport</th><th>Type</th></tr></thead>
+                          <tbody>
+                            {picks.map((selection) => (
+                              <tr key={selection.id}>
+                                <td><b>#{selection.overallPick}</b></td>
+                                <td>{selection.team?.name ?? 'Unknown'}</td>
+                                <td><b>{selection.asset?.name ?? 'Unknown asset'}</b></td>
+                                <td>{selection.asset ? <Badge>{selection.asset.sport}</Badge> : '—'}</td>
+                                <td><Badge tone={selection.selectionType === 'KEEPER' ? 'warn' : 'neutral'}>{selection.selectionType}</Badge></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : <p className="muted">No selections recorded.</p>}
+                  </section>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="draft-team-grid">
+              {state.teams.map((team) => {
+                const picks = selectionRows.filter((selection) => selection.teamId === team.id);
+                return (
+                  <section className="draft-team-card" key={team.id}>
+                    <div className="draft-team-card-head">
+                      <div><b>{team.name}</b><small>{team.managerName}</small></div>
+                      <Badge>{picks.length}/{state.draft.rounds}</Badge>
+                    </div>
+                    {picks.length ? picks.map((selection) => (
+                      <div className="draft-team-pick" key={selection.id}>
+                        <span>R{selection.round} · #{selection.overallPick}</span>
+                        <b>{selection.asset?.name ?? 'Unknown asset'}</b>
+                        <small>{selection.asset?.sport ?? ''}{selection.selectionType === 'KEEPER' ? ' · KEEPER' : ''}</small>
+                      </div>
+                    )) : <p className="muted">No picks yet.</p>}
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 }
@@ -986,6 +1336,7 @@ function Commissioner({ state, teamId, setError }) {
     accentColor: state.league.accentColor ?? '#22d3ee',
     themeMode: state.league.themeMode ?? 'dark',
   });
+  const [leagueName, setLeagueName] = useState(state.league.name ?? '');
   const [draftDate, setDraftDate] = useState(toLocalDateTimeInput(state.draft?.scheduledAt));
   const [draftOrderIds, setDraftOrderIds] = useState(() => {
     const configured = (state.draft?.order ?? []).slice().sort((a, b) => a.slot - b.slot).map((row) => row.teamId);
@@ -1001,6 +1352,10 @@ function Commissioner({ state, teamId, setError }) {
       themeMode: state.league.themeMode ?? 'dark',
     });
   }, [state.league.id, state.league.name, state.league.logoUrl, state.league.primaryColor, state.league.accentColor, state.league.themeMode]);
+
+  useEffect(() => {
+    setLeagueName(state.league.name ?? '');
+  }, [state.league.id, state.league.name]);
 
   useEffect(() => {
     setDraftDate(toLocalDateTimeInput(state.draft?.scheduledAt));
@@ -1033,7 +1388,6 @@ function Commissioner({ state, teamId, setError }) {
           <div><b>{appearance.name || 'Ten Sport Fantasy League'}</b><small>{appearance.themeMode} theme</small></div>
         </div>
         <div className="appearance-fields">
-          <label><span>League name</span><input value={appearance.name} maxLength={80} onChange={(e) => setAppearanceField('name', e.target.value)} /></label>
           <label><span>League logo HTTPS URL</span><input value={appearance.logoUrl} onChange={(e) => setAppearanceField('logoUrl', e.target.value)} placeholder="https://…" /></label>
           <div className="color-fields">
             <label><span>Primary colour</span><div className="color-input"><input type="color" value={appearance.primaryColor} onChange={(e) => setAppearanceField('primaryColor', e.target.value)} /><code>{appearance.primaryColor}</code></div></label>
@@ -1102,7 +1456,12 @@ function Commissioner({ state, teamId, setError }) {
         )}
       </Card>
 
-      <Card title="League Access" icon={Layers3}>
+      <Card title="League Name & Access" icon={Layers3}>
+        <label className="field-label">
+          <span>League name</span>
+          <input value={leagueName} maxLength={80} onChange={(e) => setLeagueName(e.target.value)} />
+        </label>
+        <Button onClick={() => run(() => leagueService.renameLeague(leagueName), setError)}>Rename League</Button>
         <div className="join-code">{state.league.joinCode}</div>
         <p className="muted">Share this unique code with managers you want to invite.</p>
         <div className="detail"><span>Managers</span><b>{state.teams.length}</b></div>
@@ -1231,7 +1590,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.10 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.11 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>
