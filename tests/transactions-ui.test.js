@@ -1,0 +1,91 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { build } from 'esbuild';
+import { JSDOM } from 'jsdom';
+import React, { act } from 'react';
+import { createRoot } from 'react-dom/client';
+import { createRequire } from 'node:module';
+import { createSeedState } from '../src/domain/seed.js';
+
+test('My Team trade notice, editable counter, recipient acceptance, trade creation, and pool add/drop', async t => {
+  const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost' });
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, localStorage: dom.window.localStorage, IS_REACT_ACT_ENVIRONMENT: true });
+  let root;
+  t.after(async () => { await act(async () => root?.unmount()); dom.window.close(); });
+  const bundle = await build({ entryPoints: ['src/App.jsx'], bundle: true, write: false, platform: 'node', format: 'cjs', external: ['react','react-dom'],
+    define: { 'import.meta.env.VITE_SUPABASE_URL': '""', 'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': '""' } });
+  const mount = async state => {
+    if (root) await act(async () => root.unmount());
+    localStorage.setItem('ten-sport-v0.3', JSON.stringify(state));
+    const module = { exports: {} };
+    new Function('require','module','exports',bundle.outputFiles[0].text)(createRequire(import.meta.url),module,module.exports);
+    root = createRoot(document.getElementById('root'));
+    await act(async () => root.render(React.createElement(module.exports.default)));
+  };
+  const saved = () => JSON.parse(localStorage.getItem('ten-sport-v0.3'));
+  const exact = (text,scope=document) => [...scope.querySelectorAll('button')].find(b => b.textContent === text);
+  const click = async button => { assert.ok(button); assert.equal(button.disabled,false); await act(async () => button.click()); };
+  const navigate = async text => click(exact(text,document.querySelector('nav')));
+  const select = async (node,value) => { await act(async () => { node.value=value; node.dispatchEvent(new dom.window.Event('change',{bubbles:true})); }); };
+  const state = createSeedState();
+  state.assets.forEach(a => { if(a.sport==='6 Nations') a.sport='Super Rugby Pacific'; });
+  await mount(state);
+  await navigate('My Team');
+  await click(document.querySelector('.trade-notification'));
+  const details = [...document.querySelectorAll('.card')].find(c=>c.querySelector('h2')?.textContent.trim()==='Trade Details');
+  assert.ok(details.textContent.includes('Charles Leclerc'));
+  assert.ok(details.textContent.includes('Max Verstappen'));
+  assert.ok(details.textContent.includes('2027 Round 3'));
+  await click(exact('Counter',details));
+  const sides=document.querySelectorAll('.trade-builder-side');
+  assert.equal(sides.length,2);
+  assert.ok(sides[0].textContent.includes('The Decathletes'));
+  // Add a different asset and remove the initially requested one.
+  const checkboxFor=(text,scope)=>[...scope.querySelectorAll('.trade-option')].find(l=>l.textContent.includes(text))?.querySelector('input');
+  await click(checkboxFor('Max Verstappen',sides[0]));
+  await click(checkboxFor('Lando Norris',sides[0]));
+  await click(exact('Send Counteroffer'));
+  let after=saved();
+  assert.equal(after.trades.find(t=>t.id==='trade-1').status,'COUNTERED');
+  const counter=after.trades.find(t=>t.counterOfTradeId==='trade-1');
+  assert.equal(counter.fromTeamId,'team-sam');
+  assert.equal(counter.toTeamId,'team-akash');
+  assert.ok(counter.items.some(i=>i.assetId==='asset-3'));
+  // Recipient gets a My Team notification and can accept the revised offer.
+  after.currentTeamId='team-akash';after.currentRole='MANAGER';
+  await mount(after);await navigate('My Team');
+  assert.ok(document.querySelector('.trade-notification').textContent.includes('Counteroffer'));
+  await click(document.querySelector('.trade-notification'));
+  await click(exact('Accept Trade'));
+  after=saved();
+  assert.equal(after.trades.find(t=>t.id===counter.id).status,'ACCEPTED');
+  assert.equal(after.rosterMemberships.find(m=>m.assetId==='asset-3').teamId,'team-akash');
+  assert.equal(after.rosterMemberships.find(m=>m.assetId==='asset-extra-1').teamId,'team-sam');
+  assert.equal(after.draftPicks.find(p=>p.id==='pick-2027-3-1').currentTeamId,'team-sam');
+  // New offer can be initiated with picks on both sides.
+  await navigate('Transactions');await click(exact('Create Trade'));
+  await select(document.querySelector('[aria-label="Trade with"]'),'team-sam');
+  const newSides=document.querySelectorAll('.trade-builder-side');
+  await click(newSides[0].querySelector('.trade-options:nth-of-type(2) input') ?? [...newSides[0].querySelectorAll('input')].find(i=>i.closest('label').textContent.includes('2027 Round 1')));
+  await click([...newSides[1].querySelectorAll('input')].find(i=>i.closest('label').textContent.includes('2027 Round 1')));
+  await click(exact('Send Trade Offer'));
+  after=saved();assert.equal(after.trades[0].status,'PENDING');assert.equal(after.trades[0].items.length,2);
+  // Denial from the other manager leaves all items where they were.
+  after.currentTeamId='team-sam';after.currentRole='COMMISSIONER';
+  await mount(after);await navigate('My Team');await click(document.querySelector('.trade-notification'));await click(exact('Deny Trade'));
+  assert.equal(saved().trades[0].status,'DECLINED');
+  await navigate('Assets');
+  const row=[...document.querySelectorAll('tbody tr')].find(r=>r.textContent.includes('Ludvig Aberg'));
+  assert.equal(row.cells.at?.(-1)?.textContent ?? row.cells[row.cells.length-1].textContent,'Add');
+  await click(exact('Add',row));
+  assert.ok(document.querySelector('[role="dialog"]'));
+  assert.ok(exact('Confirm Add').disabled,'Full roster requires a drop');
+  await select(document.querySelector('[aria-label="Asset to drop"]'),'asset-14');
+  await click(exact('Confirm Add / Drop'));
+  after=saved();
+  assert.equal(after.rosterMemberships.filter(m=>m.teamId==='team-sam').length,20);
+  assert.ok(!after.rosterMemberships.some(m=>m.assetId==='asset-14'));
+  assert.equal(after.rosterMemberships.find(m=>m.assetId==='asset-extra-4').teamId,'team-sam');
+  assert.equal(after.waiverTransactions[0].droppedAssetId,'asset-14');
+  assert.equal(document.querySelector('[role="dialog"]'),null);
+});

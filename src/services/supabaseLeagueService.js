@@ -576,6 +576,7 @@ export class SupabaseLeagueService {
         status: row.status,
         createdAt: row.created_at,
         resolvedAt: row.resolved_at,
+        counterOfTradeId: row.counter_of_trade_id,
         items: (itemsByTradeId[row.id] ?? []).map((item) => ({
           id: item.id,
           side: item.side === 'PROPOSER' ? 'FROM' : 'TO',
@@ -756,6 +757,23 @@ export class SupabaseLeagueService {
     const { error } = await client().rpc('accept_trade', { p_trade_id: tradeId });
     if (error) throw error;
     return this.refresh();
+  }
+
+  async prepareTradeBuilder() {
+    const state = this.requireState();
+    const { error } = await client().rpc('ensure_future_draft_picks', { p_league_id: state.league.id });
+    if (error) throw error;
+    return this.refresh();
+  }
+
+  async proposeTrade(toTeamId, items, counterOfTradeId = null) {
+    const state = this.requireState();
+    const { data, error } = await client().rpc(counterOfTradeId ? 'counter_trade' : 'propose_trade', counterOfTradeId
+      ? { p_trade_id: counterOfTradeId, p_items: items }
+      : { p_season_id: state.league.seasonId, p_from_team_id: state.currentTeamId, p_to_team_id: toTeamId, p_items: items });
+    if (error) throw error;
+    await this.refresh();
+    return data;
   }
 
   async declineTrade(tradeId) {

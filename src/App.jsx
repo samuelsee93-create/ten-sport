@@ -23,6 +23,8 @@ import { signIn, signOut, signUp } from './services/authService.js';
 import { loadAssetWatchlist, setAssetWatched } from './services/watchlistService.js';
 import { DRAFT_STATUS, LINEUP_STATUS, SPORTS } from './domain/constants.js';
 import { previousScore, rankedAssets, draftEligibility, remainingPickSeconds } from './domain/draft.js';
+import TradeBuilder from './components/TradeBuilder.jsx';
+import AddAsset from './components/AddAsset.jsx';
 import {
   activeRosterForTeam,
   benchRosterForTeam,
@@ -373,7 +375,7 @@ function SportCoverage({ state, teamId }) {
   );
 }
 
-function MyTeam({ state, teamId, setError }) {
+function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
   const team = teamById(state, teamId);
   const active = team ? activeRosterForTeam(state, teamId) : [];
   const bench = team ? benchRosterForTeam(state, teamId) : [];
@@ -420,6 +422,13 @@ function MyTeam({ state, teamId, setError }) {
 
   return (
     <div className="stack">
+      <Card title="Team Moves" icon={ArrowLeftRight} action={<div className="inline"><Button onClick={() => onTrades(null)}>Create Trade</Button><Button kind="ghost" onClick={onAssets}>Add Assets</Button></div>}>
+        {state.trades.filter(t => t.toTeamId === teamId && t.status === 'PENDING').map(trade =>
+          <button key={trade.id} className="trade-notification" onClick={() => onTrades(trade.id)}>
+            <ArrowLeftRight size={18} /><span><b>{trade.counterOfTradeId ? 'Counteroffer' : 'Trade offer'} from {teamById(state, trade.fromTeamId)?.name}</b><small>Review all assets and picks · Accept, deny, or counter</small></span><span>View Trade →</span>
+          </button>)}
+        {!state.trades.some(t => t.toTeamId === teamId && t.status === 'PENDING') && <p className="muted">No incoming trade offers.</p>}
+      </Card>
       <Card title="Team Identity" icon={Users}>
         <div className="team-identity">
           <div className="team-logo">
@@ -582,7 +591,8 @@ function TeamDetail({ state, teamId, onBack }) {
   );
 }
 
-function Assets({ state }) {
+function Assets({ state, teamId }) {
+  const [addingAsset, setAddingAsset] = useState(null);
   const [query, setQuery] = useState('');
   const [sport, setSport] = useState('ALL');
   const [availability, setAvailability] = useState('ALL');
@@ -748,7 +758,8 @@ function Assets({ state }) {
   );
 
   return (
-    <Card title="Draftable Assets" icon={List} action={<div className="inline"><Badge>{state.assets.length} assets</Badge><Badge tone="warn">{watchListIds.length} watched</Badge></div>}>
+    <Card title="Asset Pool" icon={List} action={<div className="inline"><Badge>{state.assets.length} assets</Badge><Badge tone="warn">{watchListIds.length} watched</Badge></div>}>
+      {addingAsset && <AddAsset key={addingAsset.id} state={state} teamId={teamId} asset={addingAsset} onClose={() => setAddingAsset(null)} />}
       <p className="muted">
         Previous-season points use the Ten Sport v1.2 model. Rank is shown as overall rank across every draftable asset, followed by rank within that sport.
       </p>
@@ -799,6 +810,7 @@ function Assets({ state }) {
                 <SortHeader sortKey="POINTS" defaultDirection="DESC" numeric>Points</SortHeader>
                 <SortHeader sortKey="RANK" numeric>Rank</SortHeader>
                 <SortHeader sortKey="STATUS">Status</SortHeader>
+                <th>Add</th>
               </tr>
             </thead>
             <tbody>
@@ -825,6 +837,7 @@ function Assets({ state }) {
                       ? <Badge>{owner.name}</Badge>
                       : <Badge tone="good">Available</Badge>}
                   </td>
+                  <td>{!owner && teamId && <Button kind="ghost" disabled={['LIVE', 'PAUSED'].includes(state.draft?.status) || state.lockedAssetIds.includes(asset.id)} onClick={() => setAddingAsset(asset)} title={`Add ${asset.name}`}>Add</Button>}</td>
                 </tr>
               ))}
             </tbody>
@@ -835,11 +848,19 @@ function Assets({ state }) {
   );
 }
 
-function TradeCard({ state, trade, teamId, setError, interactive = false }) {
+function TradeCard({ state, trade, teamId, setError, interactive = false, onCounter }) {
+  const [busy, setBusy] = useState(false);
+  const resolve = async (accept) => {
+    if (busy) return;
+    setBusy(true);
+    try { await (accept ? leagueService.acceptTrade(trade.id) : leagueService.declineTrade(trade.id)); }
+    catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
   const from = teamById(state, trade.fromTeamId);
   const to = teamById(state, trade.toTeamId);
   return (
-    <div className="trade">
+    <div className="trade" id={`trade-${trade.id}`}>
       <div className="trade-head">
         <div><b>{from?.name ?? 'Unknown team'}</b> → <b>{to?.name ?? 'Unknown team'}</b></div>
         <Badge tone={trade.status === 'PENDING' ? 'warn' : trade.status === 'ACCEPTED' ? 'good' : 'neutral'}>{trade.status}</Badge>
@@ -850,8 +871,9 @@ function TradeCard({ state, trade, teamId, setError, interactive = false }) {
       </div>
       {interactive && trade.status === 'PENDING' && trade.toTeamId === teamId && (
         <div className="inline">
-          <Button onClick={() => run(() => leagueService.acceptTrade(trade.id), setError)}>Accept Trade</Button>
-          <Button kind="ghost" onClick={() => run(() => leagueService.declineTrade(trade.id), setError)}>Decline</Button>
+          <Button disabled={busy} onClick={() => resolve(true)}>Accept Trade</Button>
+          <Button kind="ghost" disabled={busy} onClick={() => resolve(false)}>Deny Trade</Button>
+          <Button kind="ghost" disabled={busy} onClick={() => onCounter(trade)}>Counter</Button>
         </div>
       )}
       <small>{formatDate(trade.resolvedAt ?? trade.createdAt)}</small>
@@ -859,7 +881,21 @@ function TradeCard({ state, trade, teamId, setError, interactive = false }) {
   );
 }
 
-function Transactions({ state, teamId, setError }) {
+function Transactions({ state, teamId, setError, focusTradeId, startBuilder = false }) {
+  const [builder, setBuilder] = useState(false);
+  const [counterTrade, setCounterTrade] = useState(null);
+  const [preparing, setPreparing] = useState(false);
+  const [selectedTradeId, setSelectedTradeId] = useState(focusTradeId);
+  const [success, setSuccess] = useState('');
+  const openBuilder = async (trade = null) => {
+    if (preparing) return;
+    setPreparing(true); setError('');
+    try { await leagueService.prepareTradeBuilder(); setCounterTrade(trade); setBuilder(true); setSuccess(''); }
+    catch (e) { setError(e.message); }
+    finally { setPreparing(false); }
+  };
+  useEffect(() => { if (startBuilder) openBuilder(); }, []);
+  const selectedTrade = state.trades.find(t => t.id === selectedTradeId);
   const pending = state.trades.filter((trade) => trade.status === 'PENDING' && (trade.toTeamId === teamId || trade.fromTeamId === teamId));
   const completedTrades = state.trades.filter((trade) => trade.status !== 'PENDING');
 
@@ -870,8 +906,13 @@ function Transactions({ state, teamId, setError }) {
 
   return (
     <div className="stack">
-      <Card title="Pending Trades" icon={ArrowLeftRight}>
-        {pending.length ? pending.map((trade) => <TradeCard key={trade.id} state={state} trade={trade} teamId={teamId} setError={setError} interactive />) : <p className="muted">No pending trades for your team.</p>}
+      {builder && <TradeBuilder state={state} teamId={teamId} counterTrade={counterTrade} onClose={() => setBuilder(false)} onSent={id => { setBuilder(false); setSelectedTradeId(id); setSuccess('Offer sent. The other manager can review it on My Team.'); }} />}
+      {success && <p className="success-message" role="status">{success}</p>}
+      {selectedTrade && <Card title="Trade Details" icon={ArrowLeftRight} action={<Button kind="ghost" onClick={() => setSelectedTradeId(null)}>Close Details</Button>}>
+        <TradeCard state={state} trade={selectedTrade} teamId={teamId} setError={setError} interactive onCounter={openBuilder} />
+      </Card>}
+      <Card title="Pending Trades" icon={ArrowLeftRight} action={<Button disabled={!teamId || preparing || builder} onClick={() => openBuilder()}>{preparing ? 'Loading…' : 'Create Trade'}</Button>}>
+        {pending.length ? pending.filter(trade => trade.id !== selectedTradeId).map((trade) => <TradeCard key={trade.id} state={state} trade={trade} teamId={teamId} setError={setError} interactive onCounter={openBuilder} />) : <p className="muted">No pending trades for your team.</p>}
       </Card>
       <Card title="Transaction Log" icon={HistoryIcon}>
         {activity.length === 0 && <p className="muted">No completed trades or waiver pickups yet.</p>}
@@ -883,7 +924,7 @@ function Transactions({ state, teamId, setError }) {
               return (
                 <div className="transaction-row" key={`trade-${item.trade.id}`}>
                   <Badge>TRADE</Badge>
-                  <div><b>{from?.name} ↔ {to?.name}</b><small>{item.trade.status}</small></div>
+                  <div><b>{from?.name} ↔ {to?.name}</b><small>{item.trade.status}</small><Button kind="ghost" onClick={() => setSelectedTradeId(item.trade.id)}>View Trade</Button></div>
                   <span>{formatDate(item.date)}</span>
                 </div>
               );
@@ -1652,6 +1693,7 @@ export default function App() {
   const [page, setPage] = useState('Dashboard');
   const [error, setError] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const [tradeView, setTradeView] = useState({ id: null, create: false, key: 0 });
   const isCommissioner = state?.currentRole === 'COMMISSIONER';
 
   useEffect(() => {
@@ -1684,12 +1726,16 @@ export default function App() {
     setPage('Team');
     setError('');
   };
+  const openTrades = (id) => {
+    setTradeView(v => ({ id, create: !id, key: v.key + 1 }));
+    setPage('Transactions'); setError('');
+  };
 
   const content = {
     Dashboard: <Dashboard state={state} teamId={teamId} onOpenTeam={openTeam} />,
-    'My Team': <MyTeam state={state} teamId={teamId} setError={setError} />,
-    Assets: <Assets state={state} />,
-    Transactions: <Transactions state={state} teamId={teamId} setError={setError} />,
+    'My Team': <MyTeam state={state} teamId={teamId} setError={setError} onTrades={openTrades} onAssets={() => setPage('Assets')} />,
+    Assets: <Assets state={state} teamId={teamId} />,
+    Transactions: <Transactions key={`${state.league.id}:${tradeView.key}`} state={state} teamId={teamId} setError={setError} focusTradeId={tradeView.id} startBuilder={tradeView.create} />,
     History: <History state={state} />,
     Leagues: <Leagues state={state} setPage={setPage} />,
     Keepers: <Keepers state={state} teamId={teamId} setError={setError} />,
@@ -1741,6 +1787,7 @@ export default function App() {
               className={page === label ? 'active' : ''}
               onClick={() => {
                 setPage(label);
+                setTradeView(v => ({ id: null, create: false, key: v.key + 1 }));
                 setSelectedTeamId(null);
                 setError('');
               }}
@@ -1750,7 +1797,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.13 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.14 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>

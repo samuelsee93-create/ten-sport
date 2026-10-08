@@ -1,0 +1,11 @@
+# v0.14 Trades and Add/Drop
+
+My Team now has Create Trade and Add Assets shortcuts, plus incoming offer notifications. Opening a notification displays every asset and draft pick in the offer and gives the receiving manager Accept, Deny, and Counter controls. Transactions has a two-team trade builder and the transaction history links to complete trade details.
+
+The builder lets managers select assets and owned, unused draft picks from either side. Opening it provisions the next two calendar draft years with 20 pick entitlements per team, without assigning draft slots or overwriting traded ownership. The commissioner assigns slots when scheduling that year's draft. Reserved keeper picks and consumed picks are excluded. Counters reverse the proposing/receiving teams, preserve the original offer for history, and can change items on both sides.
+
+Offers and counters are created atomically. Acceptance revalidates ownership, active league membership, the trade deadline, scoring locks, roster capacity, and sport coverage, then swaps all assets and picks in one transaction. Only the recipient can accept, deny, or counter an offer. Team and item locks serialize competing trade and pickup operations. No roster or pick moves at proposal time.
+
+Available assets in the pool now have an Add action. The confirmation dialog supports an optional drop, requires a drop for a full roster, preserves the replaced asset's active/bench status, and returns the dropped asset to the pool. A roster must still be able to represent all ten sports. Locked assets cannot be acquired or dropped. Pool additions and asset trades are unavailable while the draft is live or paused; future pick-only trades remain available.
+
+Validation: `npm test` exercises My Team notifications, counter editing, recipient acceptance, new pick trades, denials, and full-roster add/drop along with existing draft tests. `tests/transactions_integration.sql` runs actual authenticated Supabase RPCs inside a rolled-back transaction, checking entitlement idempotence, asset/pick exchange, recipient authorization, stale ownership rollback, scoring locks, roster and sport rules, duplicate items, and transaction history. `npm run build` verifies the production bundle.
