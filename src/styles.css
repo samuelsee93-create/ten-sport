@@ -439,3 +439,7 @@ select{background:#07131d;border:1px solid #284052;color:#fff;border-radius:10px
 .trade-selected {border:1px solid var(--primary);border-radius:10px;padding:8px;}
 .trade-selected>div {display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px;}
 .trade-selected .btn {flex-shrink:0;}
+.keeper-cell {display:flex;flex-direction:column;gap:5px;align-items:flex-start;min-width:110px;}
+.keeper-cell small {white-space:nowrap;}
+.team-roster-table .sort-header {white-space:nowrap;}
+.keeper-grid .keeper .keeper-cell {flex-shrink:0;}

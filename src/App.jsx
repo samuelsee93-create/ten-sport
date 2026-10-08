@@ -20,7 +20,8 @@ import {
 } from 'lucide-react';
 import { hostedBackendEnabled, leagueService } from './services/service.js';
 import { signIn, signOut, signUp } from './services/authService.js';
-import { loadAssetWatchlist, setAssetWatched } from './services/watchlistService.js';
+import { useAssetWatchlist } from './components/useAssetWatchlist.js';
+import { sortedRoster, keeperChoices } from './domain/roster.js';
 import { DRAFT_STATUS, LINEUP_STATUS, SPORTS } from './domain/constants.js';
 import { previousScore, rankedAssets, draftEligibility, remainingPickSeconds } from './domain/draft.js';
 import TradeBuilder from './components/TradeBuilder.jsx';
@@ -383,6 +384,14 @@ function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
   const [logoUrl, setLogoUrl] = useState(team?.logoUrl ?? '');
   const [swapSourceId, setSwapSourceId] = useState(null);
   const [moving, setMoving] = useState(false);
+  const [sort, setSort] = useState({ key: 'POINTS', direction: 'DESC' });
+  const [query, setQuery] = useState('');
+  const [sport, setSport] = useState('ALL');
+  const [lineup, setLineup] = useState('ALL');
+  const [watch, setWatch] = useState('ALL');
+  const [keeperBusy, setKeeperBusy] = useState(false);
+  const { ids: watchIds, error: watchError, toggle: toggleWatch } = useAssetWatchlist(state);
+  const choices = keeperChoices(state, teamId);
 
   useEffect(() => {
     setName(team?.name ?? '');
@@ -394,10 +403,17 @@ function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
     return <Card title="My Team" icon={Users}><p className="muted">No team is assigned to this account yet.</p></Card>;
   }
 
-  const roster = [...active, ...bench].map((membership) => ({
-    ...membership,
-    previous: previousScore(state, membership.asset),
-  }));
+  const roster = sortedRoster(state, teamId, sort, { query, sport, lineup, watch }, watchIds, choices);
+  const allRoster = [...active, ...bench];
+  const changeSort = (key, direction = 'ASC') => setSort(current => ({ key,
+    direction: current.key === key ? (current.direction === 'ASC' ? 'DESC' : 'ASC') : direction }));
+  const keeperToggle = async assetId => {
+    if (keeperBusy) return;
+    setKeeperBusy(true);
+    try { await leagueService.toggleKeeper(teamId, assetId); }
+    catch(e) { setError(e.message); }
+    finally { setKeeperBusy(false); }
+  };
 
   const toggleLineup = (membership) => run(
     () => leagueService.setLineupStatus(
@@ -407,7 +423,7 @@ function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
     ),
     setError
   );
-  const swapSource = roster.find(row => row.assetId === swapSourceId);
+  const swapSource = allRoster.find(row => row.assetId === swapSourceId);
   const swapWith = async (target) => {
     if (!swapSource || moving) return;
     setMoving(true);
@@ -453,8 +469,14 @@ function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
         <SportCoverage state={state} teamId={teamId} />
       </Card>
 
+      <Card title={`Next Draft Keepers · ${choices.length}/${state.league.keeperSlots ?? 3}`} icon={Crown}>
+        <p className="muted">Designate keepers using the Keeper column below. You can change your choices until {state.keeperPlan?.deadline ? formatDate(state.keeperPlan.deadline) : 'the next draft starts'}.</p>
+        <div className="inline">{choices.map(id => <Badge key={id} tone="good">{state.assets.find(a => a.id === id)?.name}</Badge>)}</div>
+        {state.keeperPlan?.closed && <p className="muted">Keeper choices are locked.</p>}
+      </Card>
+
       <Card
-        title={`Roster · ${roster.length}/20`}
+        title={`Roster · ${allRoster.length}/${state.league.rosterSize ?? 20}`}
         icon={Activity}
         action={
           <div className="inline">
@@ -464,6 +486,14 @@ function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
         }
       >
         <p className="muted">Click a position to swap with another asset. BN assets stay on your roster and do not earn points.</p>
+        <p className="muted">Sorting keeps active assets first and bench assets last.</p>
+        <div className="asset-toolbar asset-toolbar-compact asset-toolbar-watch">
+          <label className="search-box"><Search size={16} /><input aria-label="Filter my roster" value={query} onChange={e => setQuery(e.target.value)} placeholder="Filter asset name…" /></label>
+          <select aria-label="Roster sport" value={sport} onChange={e => setSport(e.target.value)}><option value="ALL">All sports</option>{[...new Set(allRoster.map(r => r.asset.sport))].sort().map(s => <option key={s} value={s}>{s}</option>)}</select>
+          <select aria-label="Roster status" value={lineup} onChange={e => setLineup(e.target.value)}><option value="ALL">All positions</option><option value="ACTIVE">Active only</option><option value="BENCH">Bench only</option></select>
+          <select aria-label="Roster watch status" value={watch} onChange={e => setWatch(e.target.value)}><option value="ALL">All watch statuses</option><option value="WATCHED">My Watch List only</option></select>
+        </div>
+        {watchError && <p className="error" role="alert">{watchError}</p>}
         {swapSource && <div className="lineup-swap-prompt" role="status">
           <span>Swap <b>{swapSource.asset.name}</b> with {swapSource.lineupStatus === LINEUP_STATUS.ACTIVE ? 'an asset on your bench' : 'an active asset'}.</span>
           <Button kind="ghost" disabled={moving} onClick={() => setSwapSourceId(null)}>Cancel</Button>
@@ -479,10 +509,14 @@ function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
               <thead>
                 <tr>
                   <th>Pos</th>
-                  <th>Asset</th>
-                  <th>Sport</th>
-                  <th className="numeric">Points For You</th>
-                  <th className="numeric">Previous Season</th>
+                  <RosterSortHeader sort={sort} sortKey="WATCH" onSort={changeSort} defaultDirection="DESC">Watch</RosterSortHeader>
+                  <RosterSortHeader sort={sort} sortKey="NAME" onSort={changeSort}>Asset</RosterSortHeader>
+                  <RosterSortHeader sort={sort} sortKey="SPORT" onSort={changeSort}>Sport</RosterSortHeader>
+                  <RosterSortHeader sort={sort} sortKey="POINTS" onSort={changeSort} defaultDirection="DESC" numeric>Points For You</RosterSortHeader>
+                  <RosterSortHeader sort={sort} sortKey="PREVIOUS" onSort={changeSort} defaultDirection="DESC" numeric>Previous Season</RosterSortHeader>
+                  <RosterSortHeader sort={sort} sortKey="RANK" onSort={changeSort} numeric>Rank</RosterSortHeader>
+                  <RosterSortHeader sort={sort} sortKey="STATUS" onSort={changeSort}>Status</RosterSortHeader>
+                  <RosterSortHeader sort={sort} sortKey="KEEPER" onSort={changeSort} defaultDirection="DESC">Keeper</RosterSortHeader>
                 </tr>
               </thead>
               <tbody>
@@ -495,10 +529,14 @@ function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
                         {state.lockedAssetIds.includes(membership.assetId) ? 'Locked' : swapSource && swapSource.lineupStatus !== membership.lineupStatus ? 'Swap' : membership.lineupStatus === LINEUP_STATUS.ACTIVE ? 'ACT' : 'BN'}
                       </Button>
                     </td>
+                    <td><button className={`favorite-button ${membership.watched ? 'active' : ''}`} aria-label={`${membership.watched ? 'Unwatch' : 'Watch'} ${membership.asset.name}`} onClick={() => toggleWatch(membership.assetId)}><Star size={17} fill={membership.watched ? 'currentColor' : 'none'} /></button></td>
                     <td><b>{membership.asset.name}</b></td>
                     <td><Badge>{membership.asset.sport}</Badge></td>
-                    <td className="numeric">{Number(membership.asset.pointsForTeam ?? 0).toLocaleString()}</td>
+                    <td className="numeric">{Number(membership.points).toLocaleString()}</td>
                     <td className="numeric">{membership.previous ? membership.previous.points.toLocaleString() : '—'}</td>
+                    <td className="numeric rank-cell">#{membership.rank.overall}<span> ({membership.asset.sport} #{membership.rank.sport})</span></td>
+                    <td><Badge tone={state.lockedAssetIds.includes(membership.assetId) ? 'warn' : 'neutral'}>{state.lockedAssetIds.includes(membership.assetId) ? 'Locked' : membership.lineupStatus === 'ACTIVE' ? 'Active' : 'Bench'}</Badge></td>
+                    <td><KeeperChoice state={state} teamId={teamId} assetId={membership.assetId} busy={keeperBusy} onToggle={keeperToggle} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -506,8 +544,8 @@ function MyTeam({ state, teamId, setError, onTrades, onAssets }) {
           </div>
         ) : (
           <div className="empty-state">
-            <b>Your roster is empty.</b>
-            <span>Drafted and acquired assets will appear here in one vertical roster view.</span>
+            <b>{allRoster.length ? 'No assets match these filters.' : 'Your roster is empty.'}</b>
+            <span>{allRoster.length ? 'Adjust your name, sport, position, or watch filters.' : 'Drafted and acquired assets will appear here.'}</span>
           </div>
         )}
       </Card>
@@ -597,8 +635,7 @@ function Assets({ state, teamId }) {
   const [sport, setSport] = useState('ALL');
   const [availability, setAvailability] = useState('ALL');
   const [watchFilter, setWatchFilter] = useState('ALL');
-  const [watchListIds, setWatchListIds] = useState([]);
-  const [watchError, setWatchError] = useState('');
+  const { ids: watchListIds, error: watchError, toggle: toggleWatch } = useAssetWatchlist(state);
   const [sort, setSort] = useState({ key: 'POINTS', direction: 'DESC' });
 
   const sports = [...new Set(state.assets.map((asset) => asset.sport))].sort();
@@ -607,19 +644,6 @@ function Assets({ state, teamId }) {
   );
 
   const watchedSet = useMemo(() => new Set(watchListIds), [watchListIds]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setWatchError('');
-    loadAssetWatchlist({ leagueId: state.league.id, userId: state.currentUserId })
-      .then((assetIds) => {
-        if (!cancelled) setWatchListIds(assetIds);
-      })
-      .catch((error) => {
-        if (!cancelled) setWatchError(error.message || 'Unable to load watch list.');
-      });
-    return () => { cancelled = true; };
-  }, [state.league.id, state.currentUserId]);
 
   const rankedAssets = useMemo(() => {
     const base = state.assets.map((asset) => ({
@@ -669,27 +693,6 @@ function Assets({ state, teamId }) {
   };
 
   const direction = sort.direction === 'ASC' ? 1 : -1;
-
-  const toggleWatch = async (assetId) => {
-    const wasWatched = watchedSet.has(assetId);
-    const optimistic = wasWatched
-      ? watchListIds.filter((id) => id !== assetId)
-      : [...watchListIds, assetId];
-    setWatchListIds(optimistic);
-    setWatchError('');
-    try {
-      const next = await setAssetWatched({
-        leagueId: state.league.id,
-        userId: state.currentUserId,
-        assetId,
-        watched: !wasWatched,
-      });
-      setWatchListIds(next);
-    } catch (error) {
-      setWatchListIds(watchListIds);
-      setWatchError(error.message || 'Unable to update watch list.');
-    }
-  };
 
   const rows = state.assets
     .map((asset) => {
@@ -1034,62 +1037,54 @@ function Leagues({ state, setPage }) {
   );
 }
 
-function Keepers({ state, teamId, setError }) {
-  const keepers = state.keeperSelections.filter((row) => row.teamId === teamId);
-  const eligible = (state.keeperEligibleRoster ?? [])
-    .filter((row) => row.teamId === teamId)
-    .map((row) => ({ ...row, asset: state.assets.find((asset) => asset.id === row.assetId) }))
-    .filter((row) => row.asset);
+function RosterSortHeader({ sort, sortKey, onSort, children, defaultDirection = 'ASC', numeric = false }) {
+  const selected = sort.key === sortKey;
+  return <th className={numeric ? 'numeric' : ''} aria-sort={selected ? (sort.direction === 'ASC' ? 'ascending' : 'descending') : 'none'}>
+    <button className={`sort-header ${selected ? 'active' : ''}`} onClick={() => onSort(sortKey, defaultDirection)}>
+      <span>{children}</span><span className="sort-indicator">{selected ? (sort.direction === 'ASC' ? '↑' : '↓') : '↕'}</span>
+    </button>
+  </th>;
+}
 
-  return (
-    <Card
-      title={`Keeper Centre · ${keepers.length}/3`}
-      icon={Crown}
-      action={<Badge tone="warn">Deadline {formatDate(state.league.keeperDeadline)}</Badge>}
-    >
-      <p className="muted">
-        Keep 0–3 assets. Each keeper costs one round earlier than its original draft round for every year kept, for a maximum of three keeper years.
-      </p>
-      {!state.keeperSourceSeason ? (
-        <div className="empty-state">
-          <b>Inaugural season</b>
-          <span>There are no keeper-eligible assets until this league completes its first season.</span>
-        </div>
-      ) : eligible.length === 0 ? (
-        <div className="empty-state">
-          <b>No keeper-eligible assets</b>
-          <span>Only assets from your final {state.keeperSourceSeason.label} roster that remain draftable can be kept.</span>
-        </div>
-      ) : (
-        <div className="keeper-grid">
-          {eligible.map((membership) => {
-            const keeper = keepers.find((row) => row.assetId === membership.assetId);
-            return (
-              <button
-                key={membership.assetId}
-                className={`keeper ${keeper ? 'selected' : ''}`}
-                onClick={() => run(() => leagueService.toggleKeeper(teamId, membership.assetId), setError)}
-              >
-                <div>
-                  <b>{membership.asset.name}</b>
-                  <small>
-                    {membership.asset.sport}
-                    {keeper
-                      ? ` · ${keeper.sourceType === 'WAIVER' ? 'Waiver' : 'Draft'} source · Year ${keeper.keeperYear} · Costs Round ${keeper.costRound}`
-                      : ' · Select to calculate keeper cost'}
-                  </small>
-                </div>
-                {keeper ? <Crown size={18} /> : <span>Choose</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      <div className="callout">
-        Keeper age follows the asset through trades. If an asset returns to the draft and is selected again, its keeper clock resets from the new draft round.
-      </div>
-    </Card>
-  );
+function KeeperChoice({ state, teamId, assetId, busy, onToggle }) {
+  const selected = keeperChoices(state, teamId).includes(assetId);
+  const option = state.keeperPlan?.eligible?.find(row => row.assetId === assetId);
+  const limit = state.league.keeperSlots ?? 3;
+  const closed = state.keeperPlan?.closed;
+  const reason = closed ? 'Keeper choices are locked.' : !selected && option?.reason ? option.reason
+    : !selected && state.keeperPlan && !option ? 'This asset is not keeper eligible.'
+    : !selected && keeperChoices(state, teamId).length >= limit ? `You can designate up to ${limit} keepers.` : '';
+  return <div className="keeper-cell">
+    <Button kind={selected ? 'primary' : 'ghost'} disabled={busy || !!reason} title={reason || (selected ? 'Remove keeper designation' : 'Designate for the next draft')}
+      onClick={() => onToggle(assetId)}>{selected ? 'Keeper ✓' : 'Designate'}</Button>
+    {option?.costRound > 0 && !option.reason && <small>Year {option.keeperYear} · Round {option.costRound}</small>}
+  </div>;
+}
+
+function Keepers({ state, teamId, setError }) {
+  const [busy, setBusy] = useState(false);
+  const choices = keeperChoices(state, teamId);
+  const eligible = (state.keeperPlan?.eligible ?? rosterForTeam(state, teamId))
+    .map(row => ({ ...row, asset: state.assets.find(a => a.id === row.assetId) })).filter(row => row.asset);
+  const toggle = async assetId => {
+    if (busy) return;
+    setBusy(true);
+    try { await leagueService.toggleKeeper(teamId, assetId); }
+    catch(e) { setError(e.message); }
+    finally { setBusy(false); }
+  };
+  return <Card title={`Keeper Centre · ${choices.length}/${state.league.keeperSlots ?? 3}`} icon={Crown}
+    action={<Badge tone="warn">{state.keeperPlan?.deadline ? `Deadline ${formatDate(state.keeperPlan.deadline)}` : 'Deadline: next draft start'} </Badge>}>
+    <p className="muted">Designate up to {state.league.keeperSlots ?? 3} keepers from your {state.keeperPlan?.sourceLabel ?? state.league.season} roster. You can change your choices before the deadline or next draft start.</p>
+    <p className="muted">Each draft keeper costs one round earlier for every year kept, for up to three years. Waiver keepers cost Round 8, then 7, then 6.</p>
+    {state.keeperPlan?.closed && <div className="callout">Keeper choices are locked for the next draft.</div>}
+    {!eligible.length ? <div className="empty-state"><b>No keeper-eligible roster yet.</b><span>Draft or acquire assets to start planning your next-draft keepers.</span></div>
+      : <div className="keeper-grid">{eligible.map(row => <div key={row.assetId} className={`keeper ${choices.includes(row.assetId) ? 'selected' : ''}`}>
+        <div><b>{row.asset.name}</b><small>{row.asset.sport}{row.reason ? ` · ${row.reason}` : ''}</small></div>
+        <KeeperChoice state={state} teamId={teamId} assetId={row.assetId} busy={busy} onToggle={toggle} />
+      </div>)}</div>}
+    <div className="callout">Designations are saved for the next draft. Keeper costs and available draft picks are checked when the draft is prepared. Trading or dropping an asset removes its designation.</div>
+  </Card>;
 }
 
 function Draft({ state, teamId, setError }) {
@@ -1797,7 +1792,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.14 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.15 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>

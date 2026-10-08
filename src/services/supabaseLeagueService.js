@@ -332,6 +332,8 @@ export class SupabaseLeagueService {
     const audit = unwrap(auditResult, 'Load audit log') ?? [];
     const seasons = unwrap(seasonsResult, 'Load seasons') ?? [];
 
+    const keeperPlan = team?.id ? unwrap(await c.rpc('get_keeper_state', { p_season_id: season.id, p_team_id: team.id }), 'Load keeper choices') : null;
+
     const previousCompletedSeason = seasons.find(
       (row) => row.id !== season.id && row.status === 'COMPLETE'
     ) ?? null;
@@ -535,6 +537,7 @@ export class SupabaseLeagueService {
         lineupStatus: row.lineup_status,
         acquiredAt: row.acquired_at,
       })),
+      keeperPlan,
       keeperEligibleRoster: previousRoster
         .filter((row) => assets.some((asset) => asset.id === row.asset_id))
         .map((row) => ({
@@ -730,8 +733,10 @@ export class SupabaseLeagueService {
 
   async toggleKeeper(teamId, assetId) {
     const state = this.requireState();
-    const { data, error } = await client().rpc('toggle_keeper', {
-      p_season_id: state.league.seasonId,
+    const plan = state.keeperPlan;
+    const formal = plan?.mode === 'UPCOMING' && state.keeperSelections.some(row => row.teamId === teamId && row.assetId === assetId);
+    const { data, error } = await client().rpc(formal ? 'toggle_keeper' : 'toggle_keeper_designation', {
+      ...(formal ? { p_season_id: state.league.seasonId } : { p_source_season_id: plan?.sourceSeasonId ?? state.league.seasonId }),
       p_team_id: teamId,
       p_asset_id: assetId,
     });
@@ -966,6 +971,7 @@ export class SupabaseLeagueService {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `league_id=eq.${leagueId}` }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'roster_memberships', filter: `season_id=eq.${seasonId}` }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'keeper_selections', filter: `season_id=eq.${seasonId}` }, onChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'keeper_designations' }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trades', filter: `season_id=eq.${seasonId}` }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'waiver_transactions', filter: `season_id=eq.${seasonId}` }, onChange);
 
