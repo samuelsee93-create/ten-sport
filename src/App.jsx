@@ -22,6 +22,7 @@ import { hostedBackendEnabled, leagueService } from './services/service.js';
 import { signIn, signOut, signUp } from './services/authService.js';
 import { loadAssetWatchlist, setAssetWatched } from './services/watchlistService.js';
 import { DRAFT_STATUS, LINEUP_STATUS, SPORTS } from './domain/constants.js';
+import { previousScore, rankedAssets, draftEligibility, remainingPickSeconds } from './domain/draft.js';
 import {
   activeRosterForTeam,
   benchRosterForTeam,
@@ -86,9 +87,9 @@ function useLeague() {
   return { state, loading, bootError, reload };
 }
 
-function Button({ children, onClick, kind = 'primary', disabled = false, type = 'button' }) {
+function Button({ children, onClick, kind = 'primary', disabled = false, type = 'button', title }) {
   return (
-    <button type={type} className={`btn ${kind}`} onClick={onClick} disabled={disabled}>
+    <button type={type} className={`btn ${kind}`} onClick={onClick} disabled={disabled} title={title}>
       {children}
     </button>
   );
@@ -135,10 +136,6 @@ async function run(action, setError) {
   } catch (error) {
     setError(error.message || 'Something went wrong.');
   }
-}
-
-function previousScore(state, asset) {
-  return (asset?.history ?? []).find((row) => row.seasonLabel !== state.league?.season) ?? null;
 }
 
 function AuthScreen({ onAuthenticated }) {
@@ -382,10 +379,13 @@ function MyTeam({ state, teamId, setError }) {
   const bench = team ? benchRosterForTeam(state, teamId) : [];
   const [name, setName] = useState(team?.name ?? '');
   const [logoUrl, setLogoUrl] = useState(team?.logoUrl ?? '');
+  const [swapSourceId, setSwapSourceId] = useState(null);
+  const [moving, setMoving] = useState(false);
 
   useEffect(() => {
     setName(team?.name ?? '');
     setLogoUrl(team?.logoUrl ?? '');
+    setSwapSourceId(null);
   }, [team?.id, team?.name, team?.logoUrl]);
 
   if (!team) {
@@ -405,6 +405,18 @@ function MyTeam({ state, teamId, setError }) {
     ),
     setError
   );
+  const swapSource = roster.find(row => row.assetId === swapSourceId);
+  const swapWith = async (target) => {
+    if (!swapSource || moving) return;
+    setMoving(true);
+    try {
+      const activeAsset = swapSource.lineupStatus === LINEUP_STATUS.ACTIVE ? swapSource : target;
+      const benchAsset = swapSource.lineupStatus === LINEUP_STATUS.BENCH ? swapSource : target;
+      await leagueService.swapLineupAssets(teamId, activeAsset.assetId, benchAsset.assetId);
+      setSwapSourceId(null);
+    } catch (error) { setError(error.message); }
+    finally { setMoving(false); }
+  };
 
   return (
     <div className="stack">
@@ -442,39 +454,42 @@ function MyTeam({ state, teamId, setError }) {
           </div>
         }
       >
+        <p className="muted">Click a position to swap with another asset. BN assets stay on your roster and do not earn points.</p>
+        {swapSource && <div className="lineup-swap-prompt" role="status">
+          <span>Swap <b>{swapSource.asset.name}</b> with {swapSource.lineupStatus === LINEUP_STATUS.ACTIVE ? 'an asset on your bench' : 'an active asset'}.</span>
+          <Button kind="ghost" disabled={moving} onClick={() => setSwapSourceId(null)}>Cancel</Button>
+          {((swapSource.lineupStatus === LINEUP_STATUS.BENCH && active.length < (state.league.activeSlots ?? 15))
+            || (swapSource.lineupStatus === LINEUP_STATUS.ACTIVE && bench.length < (state.league.benchSlots ?? 5))) &&
+            <Button disabled={moving} onClick={async () => { setMoving(true); await toggleLineup(swapSource); setSwapSourceId(null); setMoving(false); }}>
+              Move to empty {swapSource.lineupStatus === LINEUP_STATUS.ACTIVE ? 'bench' : 'active'} spot
+            </Button>}
+        </div>}
         {roster.length ? (
           <div className="asset-table-wrap">
             <table className="asset-table team-roster-table">
               <thead>
                 <tr>
+                  <th>Pos</th>
                   <th>Asset</th>
                   <th>Sport</th>
                   <th className="numeric">Points For You</th>
                   <th className="numeric">Previous Season</th>
-                  <th>Lineup</th>
-                  <th>Move</th>
                 </tr>
               </thead>
               <tbody>
                 {roster.map((membership) => (
-                  <tr key={membership.assetId}>
+                  <tr key={membership.assetId} className={swapSourceId === membership.assetId ? 'swap-source' : ''}>
+                    <td className="lineup-position">
+                      <Button kind={swapSource && swapSource.lineupStatus !== membership.lineupStatus ? 'primary' : 'ghost'}
+                        disabled={moving || state.lockedAssetIds.includes(membership.assetId) || (swapSource && swapSource.lineupStatus === membership.lineupStatus && swapSourceId !== membership.assetId)}
+                        onClick={() => swapSource && swapSource.lineupStatus !== membership.lineupStatus ? swapWith(membership) : setSwapSourceId(swapSourceId === membership.assetId ? null : membership.assetId)}>
+                        {state.lockedAssetIds.includes(membership.assetId) ? 'Locked' : swapSource && swapSource.lineupStatus !== membership.lineupStatus ? 'Swap' : membership.lineupStatus === LINEUP_STATUS.ACTIVE ? 'ACT' : 'BN'}
+                      </Button>
+                    </td>
                     <td><b>{membership.asset.name}</b></td>
                     <td><Badge>{membership.asset.sport}</Badge></td>
                     <td className="numeric">{Number(membership.asset.pointsForTeam ?? 0).toLocaleString()}</td>
                     <td className="numeric">{membership.previous ? membership.previous.points.toLocaleString() : '—'}</td>
-                    <td>
-                      <Badge tone={membership.lineupStatus === LINEUP_STATUS.ACTIVE ? 'good' : 'neutral'}>
-                        {membership.lineupStatus}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Button
-                        kind={membership.lineupStatus === LINEUP_STATUS.ACTIVE ? 'ghost' : 'primary'}
-                        onClick={() => toggleLineup(membership)}
-                      >
-                        {membership.lineupStatus === LINEUP_STATUS.ACTIVE ? 'Bench' : 'Activate'}
-                      </Button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1043,6 +1058,25 @@ function Draft({ state, teamId, setError }) {
   const [sportFilter, setSportFilter] = useState('ALL');
   const [preferenceFilter, setPreferenceFilter] = useState('ALL');
   const [sort, setSort] = useState({ key: 'POINTS', direction: 'DESC' });
+  const [viewTeamId, setViewTeamId] = useState(teamId);
+  const [now, setNow] = useState(Date.now());
+  const [timerSeconds, setTimerSeconds] = useState(state.draft?.pickTimerSeconds ?? 90);
+  const [picking, setPicking] = useState(false);
+  useEffect(() => { setViewTeamId(teamId); }, [teamId]);
+  useEffect(() => { setTimerSeconds(state.draft?.pickTimerSeconds ?? 90); }, [state.draft?.id, state.draft?.pickTimerSeconds]);
+  useEffect(() => {
+    if (state.draft?.status !== DRAFT_STATUS.LIVE) return;
+    const tick = setInterval(() => setNow(Date.now()), 250);
+    let busy = false;
+    const poll = setInterval(async () => {
+      if (busy) return;
+      busy = true;
+      try { await leagueService.syncDraftClock(); }
+      catch (error) { setError(error.message); }
+      finally { busy = false; }
+    }, 2000);
+    return () => { clearInterval(tick); clearInterval(poll); };
+  }, [state.draft?.id, state.draft?.status, setError]);
 
   if (!state.draft) {
     return <Card title="Live Draft Room" icon={DraftingCompass}><p className="muted">No draft is configured for this season yet.</p></Card>;
@@ -1062,11 +1096,7 @@ function Draft({ state, teamId, setError }) {
       asset,
       previous: previousScore(state, asset),
     }));
-    const overall = [...base].sort((a, b) =>
-      (b.previous?.points ?? 0) - (a.previous?.points ?? 0)
-      || a.asset.sport.localeCompare(b.asset.sport)
-      || a.asset.name.localeCompare(b.asset.name)
-    );
+    const overall = rankedAssets(state).map(asset => ({ asset }));
     const overallRankById = Object.fromEntries(overall.map((row, index) => [row.asset.id, index + 1]));
     const sportRankById = {};
     for (const sport of [...new Set(base.map((row) => row.asset.sport))]) {
@@ -1171,6 +1201,24 @@ function Draft({ state, teamId, setError }) {
     .sort((a, b) => a.overallPick - b.overallPick);
 
   const canDraft = state.draft.status === DRAFT_STATUS.LIVE && currentTeam?.id === teamId;
+  const secondsLeft = remainingPickSeconds(state.draft, now + (state.draft.clockOffsetMs ?? 0));
+  const displayedTeamId = state.teams.some(team => team.id === viewTeamId) ? viewTeamId : teamId;
+  const lastPick = selectionRows.filter(row => row.selectionType !== 'KEEPER').at(-1);
+  const upcoming = order.filter(row => row.overall > state.draft.currentOverallPick && !state.draft.selections.some(selection => selection.overallPick === row.overall)).slice(0, 5);
+  const pickAsset = async (assetId) => {
+    if (picking) return;
+    setPicking(true);
+    try { await leagueService.makeDraftPick(assetId); }
+    catch (error) { setError(error.message); }
+    finally { setPicking(false); }
+  };
+  const pickButton = (asset) => {
+    const reason = currentTeam ? draftEligibility(state, currentTeam.id, asset) : null;
+    return <Button disabled={!canDraft || picking || !!reason || secondsLeft === 0}
+      onClick={() => pickAsset(asset.id)} title={reason ?? (canDraft ? 'Draft this asset' : 'Available when you are on the clock')}>
+      {reason ?? (picking ? 'Picking…' : 'Draft')}
+    </Button>;
+  };
 
   return (
     <div className="stack">
@@ -1185,21 +1233,94 @@ function Draft({ state, teamId, setError }) {
             <h3>{currentTeam?.name ?? 'Draft complete'}</h3>
             <small>{currentTeam ? `${currentTeam.managerName} is on the clock` : 'All selections completed'}</small>
           </div>
-          <div className="timer">{state.draft.pickTimerSeconds}s</div>
+          <div className={`timer ${secondsLeft != null && secondsLeft <= 10 ? 'timer-urgent' : ''}`} aria-label="Pick time remaining">
+            {secondsLeft == null ? '—' : `${secondsLeft}s`}
+            <small>{state.draft.status === DRAFT_STATUS.PAUSED ? 'Paused' : secondsLeft === 0 ? 'Auto-picking…' : 'per pick'}</small>
+          </div>
         </div>
         <p className="muted">
           Draft date: {formatDate(state.draft.scheduledAt)} · 20-round snake draft · finished rosters must represent all 10 sports.
         </p>
+        {state.currentRole === 'COMMISSIONER' && <div className="draft-timer-controls inline">
+          <label>Pick timer (seconds) <input aria-label="Pick timer seconds" type="number" min="10" max="600" value={timerSeconds} onChange={event => setTimerSeconds(event.target.value)} /></label>
+          <Button kind="ghost" disabled={state.draft.status === DRAFT_STATUS.COMPLETE || !Number.isInteger(Number(timerSeconds)) || timerSeconds < 10 || timerSeconds > 600}
+            onClick={() => run(() => leagueService.setDraftTimer(Number(timerSeconds)), setError)}>Save Timer</Button>
+          <Button kind="ghost" disabled={state.draft.status === DRAFT_STATUS.COMPLETE}
+            onClick={() => run(() => leagueService.setDraftStatus(state.draft.status === DRAFT_STATUS.LIVE ? DRAFT_STATUS.PAUSED : DRAFT_STATUS.LIVE), setError)}>
+            {state.draft.status === DRAFT_STATUS.LIVE ? 'Pause' : state.draft.status === DRAFT_STATUS.PAUSED ? 'Resume' : 'Start Draft'}
+          </Button>
+          <small className="muted">Changing the timer gives the current pick a full clock.</small>
+        </div>}
+        <div className="draft-ticker" aria-label="Draft picks">
+          <div className="draft-ticker-pick last-pick"><small>LAST PICK</small><b>{lastPick?.asset?.name ?? 'No picks yet'}</b><span>{lastPick ? `#${lastPick.overallPick} · ${lastPick.team?.name}${lastPick.autoPicked ? ' · AUTO' : ''}` : 'Waiting for the draft'}</span></div>
+          {currentTeam && <button className="draft-ticker-pick on-clock" onClick={() => { setViewTeamId(currentTeam.id); setTab('TEAMS'); }}><small>ON THE CLOCK · #{current.overall}</small><b>{currentTeam.name}</b><span>{currentTeam.managerName}</span></button>}
+          {upcoming.map(pick => <button className="draft-ticker-pick" key={pick.overall} onClick={() => { setViewTeamId(pick.currentTeamId); setTab('TEAMS'); }}><small>UP NEXT · #{pick.overall}</small><b>{teamById(state, pick.currentTeamId)?.name}</b><span>Round {pick.round}</span></button>)}
+        </div>
 
         <div className="draft-tabs">
           <button className={tab === 'POOL' ? 'active' : ''} onClick={() => setTab('POOL')}>Draft Pool</button>
           <button className={tab === 'QUEUE' ? 'active' : ''} onClick={() => setTab('QUEUE')}>My Queue ({queueRows.length})</button>
           <button className={tab === 'BOARD' ? 'active' : ''} onClick={() => setTab('BOARD')}>Draft Board ({selectionRows.length})</button>
+          <button className={tab === 'TEAMS' ? 'active' : ''} onClick={() => setTab('TEAMS')}>Team Rosters</button>
         </div>
       </Card>
 
+      {(tab === 'QUEUE' || tab === 'POOL') && (
+        <Card
+          className="draft-queue-panel"
+          title="My Draft Queue"
+          icon={Star}
+          action={<Badge>{queueRows.length} queued</Badge>}
+        >
+          <p className="muted">When your timer expires, your first eligible queued asset is drafted. If none are eligible, the highest-ranked available asset that fits your roster is selected.</p>
+          {queueRows.length ? (
+            <div className="asset-table-wrap">
+              <table className="asset-table">
+                <thead>
+                  <tr><th>#</th><th>Asset</th><th>Sport</th><th className="numeric">Points</th><th className="numeric">Rank</th><th>Priority</th><th>Draft</th><th>Remove</th></tr>
+                </thead>
+                <tbody>
+                  {queueRows.map((row, index) => (
+                    <tr key={row.asset.id}>
+                      <td><b>{index + 1}</b></td>
+                      <td>
+                        <div className="queue-asset-name">
+                          <button
+                            className={`favorite-button ${row.preference.starred ? 'active' : ''}`}
+                            onClick={() => run(() => leagueService.setDraftFavorite(row.asset.id, !row.preference.starred), setError)}
+                          >
+                            <Star size={16} fill={row.preference.starred ? 'currentColor' : 'none'} />
+                          </button>
+                          <b>{row.asset.name}</b>
+                        </div>
+                      </td>
+                      <td><Badge>{row.asset.sport}</Badge></td>
+                      <td className="numeric">{row.previousPoints.toLocaleString()}</td>
+                      <td className="numeric rank-cell">#{row.overallRank} <span>({row.asset.sport} #{row.sportRank})</span></td>
+                      <td>
+                        <div className="queue-actions">
+                          <button disabled={index === 0} onClick={() => run(() => leagueService.moveDraftQueue(row.asset.id, -1), setError)}>↑</button>
+                          <button disabled={index === queueRows.length - 1} onClick={() => run(() => leagueService.moveDraftQueue(row.asset.id, 1), setError)}>↓</button>
+                        </div>
+                      </td>
+                      <td>{pickButton(row.asset)}</td>
+                      <td><Button kind="ghost" onClick={() => run(() => leagueService.toggleDraftQueue(row.asset.id), setError)}>Remove</Button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <b>Your queue is empty.</b>
+              <span>Add assets from Draft Pool and move their priority up or down here.</span>
+            </div>
+          )}
+        </Card>
+      )}
+
       {tab === 'POOL' && (
-        <Card title="Available Assets" icon={List} action={<Badge>{available.length} available</Badge>}>
+        <Card className="draft-pool-panel" title="Available Assets" icon={List} action={<Badge>{available.length} available</Badge>}>
           <div className="asset-toolbar asset-toolbar-draft">
             <label className="search-box">
               <Search size={16} />
@@ -1256,9 +1377,7 @@ function Draft({ state, teamId, setError }) {
                       </Button>
                     </td>
                     <td>
-                      {canDraft
-                        ? <Button onClick={() => run(() => leagueService.makeDraftPick(asset.id), setError)}>Draft</Button>
-                        : <span className="muted">—</span>}
+                      {pickButton(asset)}
                     </td>
                   </tr>
                 ))}
@@ -1268,57 +1387,19 @@ function Draft({ state, teamId, setError }) {
         </Card>
       )}
 
-      {tab === 'QUEUE' && (
-        <Card
-          title="My Draft Queue"
-          icon={Star}
-          action={<Badge>{queueRows.length} queued</Badge>}
-        >
-          <p className="muted">Private to you. Queue order is a priority list only — it does not auto-draft an asset.</p>
-          {queueRows.length ? (
-            <div className="asset-table-wrap">
-              <table className="asset-table">
-                <thead>
-                  <tr><th>#</th><th>Asset</th><th>Sport</th><th className="numeric">Points</th><th className="numeric">Rank</th><th>Priority</th><th>Remove</th></tr>
-                </thead>
-                <tbody>
-                  {queueRows.map((row, index) => (
-                    <tr key={row.asset.id}>
-                      <td><b>{index + 1}</b></td>
-                      <td>
-                        <div className="queue-asset-name">
-                          <button
-                            className={`favorite-button ${row.preference.starred ? 'active' : ''}`}
-                            onClick={() => run(() => leagueService.setDraftFavorite(row.asset.id, !row.preference.starred), setError)}
-                          >
-                            <Star size={16} fill={row.preference.starred ? 'currentColor' : 'none'} />
-                          </button>
-                          <b>{row.asset.name}</b>
-                        </div>
-                      </td>
-                      <td><Badge>{row.asset.sport}</Badge></td>
-                      <td className="numeric">{row.previousPoints.toLocaleString()}</td>
-                      <td className="numeric rank-cell">#{row.overallRank} <span>({row.asset.sport} #{row.sportRank})</span></td>
-                      <td>
-                        <div className="queue-actions">
-                          <button disabled={index === 0} onClick={() => run(() => leagueService.moveDraftQueue(row.asset.id, -1), setError)}>↑</button>
-                          <button disabled={index === queueRows.length - 1} onClick={() => run(() => leagueService.moveDraftQueue(row.asset.id, 1), setError)}>↓</button>
-                        </div>
-                      </td>
-                      <td><Button kind="ghost" onClick={() => run(() => leagueService.toggleDraftQueue(row.asset.id), setError)}>Remove</Button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty-state">
-              <b>Your queue is empty.</b>
-              <span>Add assets from Draft Pool and move their priority up or down here.</span>
-            </div>
-          )}
-        </Card>
-      )}
+      {tab === 'TEAMS' && <Card title="Team Rosters" icon={Users}>
+        <label className="field-label"><span>View drafted team</span><select value={displayedTeamId ?? ''} onChange={event => setViewTeamId(event.target.value)}>
+          {state.teams.map(team => <option key={team.id} value={team.id}>{team.name} · {team.managerName}</option>)}
+        </select></label>
+        <SportCoverage state={state} teamId={displayedTeamId} />
+        <div className="asset-table-wrap"><table className="asset-table"><thead><tr><th>Pick</th><th>Asset</th><th>Sport</th></tr></thead><tbody>
+          {rosterForTeam(state, displayedTeamId).map(row => {
+            const selection = selectionRows.find(pick => pick.assetId === row.assetId);
+            return <tr key={row.assetId}><td>{selection ? `R${selection.round} · #${selection.overallPick}${selection.selectionType === 'KEEPER' ? ' · KEEPER' : ''}` : 'Rostered'}</td><td><b>{row.asset?.name}</b></td><td><Badge>{row.asset?.sport}</Badge></td></tr>;
+          })}
+        </tbody></table></div>
+        {!rosterForTeam(state, displayedTeamId).length && <p className="muted">No assets drafted yet.</p>}
+      </Card>}
 
       {tab === 'BOARD' && (
         <Card
@@ -1392,6 +1473,8 @@ function Draft({ state, teamId, setError }) {
 }
 
 function Commissioner({ state, teamId, setError }) {
+  const [timerSeconds, setTimerSeconds] = useState(state.draft?.pickTimerSeconds ?? 90);
+  useEffect(() => { setTimerSeconds(state.draft?.pickTimerSeconds ?? 90); }, [state.draft?.id, state.draft?.pickTimerSeconds]);
   const [appearance, setAppearance] = useState({
     name: state.league.name ?? 'Ten Sport Fantasy League',
     logoUrl: state.league.logoUrl ?? '',
@@ -1467,7 +1550,9 @@ function Commissioner({ state, teamId, setError }) {
             <label className="field-label"><span>Draft date & time</span><input type="datetime-local" value={draftDate} onChange={(e) => setDraftDate(e.target.value)} /></label>
             <Button kind="ghost" disabled={!draftDate} onClick={() => run(() => leagueService.setDraftSchedule(new Date(draftDate).toISOString()), setError)}>Save Draft Date & Time</Button>
             <div className="detail"><span>Scheduled</span><b>{formatDate(state.draft.scheduledAt)}</b></div>
-            <div className="detail"><span>Pick timer</span><b>{state.draft.pickTimerSeconds}s</b></div>
+            <label className="field-label"><span>Pick timer (seconds, 10–600)</span><input type="number" min="10" max="600" value={timerSeconds} onChange={event => setTimerSeconds(event.target.value)} /></label>
+            <Button kind="ghost" disabled={state.draft.status === DRAFT_STATUS.COMPLETE || !Number.isInteger(Number(timerSeconds)) || timerSeconds < 10 || timerSeconds > 600} onClick={() => run(() => leagueService.setDraftTimer(Number(timerSeconds)), setError)}>Save Pick Timer</Button>
+            <small className="muted">A timer change resets the current pick to a full clock. Pausing freezes the remaining time.</small>
             <div className="inline">
               <Button onClick={() => run(() => leagueService.setDraftStatus(DRAFT_STATUS.LIVE), setError)}>Start / Resume</Button>
               <Button kind="ghost" onClick={() => run(() => leagueService.setDraftStatus(DRAFT_STATUS.PAUSED), setError)}>Pause</Button>
@@ -1665,7 +1750,7 @@ export default function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <Badge tone="good">{hostedBackendEnabled ? 'v0.12 LIVE' : 'v0.3 LOCAL'}</Badge>
+          <Badge tone="good">{hostedBackendEnabled ? 'v0.13 LIVE' : 'v0.3 LOCAL'}</Badge>
           <small>{hostedBackendEnabled ? 'Supabase multi-league mode' : 'Local demo mode'}</small>
         </div>
       </aside>

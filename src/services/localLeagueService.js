@@ -1,6 +1,7 @@
 import { createSeedState } from '../domain/seed.js';
 import { ACTIVE_SLOTS, KEEPER_SLOTS, LINEUP_STATUS, ROSTER_SIZE, TRADE_STATUS, DRAFT_STATUS } from '../domain/constants.js';
 import { activeSlotCount, draftOrder, rosterForTeam } from '../domain/selectors.js';
+import { draftEligibility, rankedAssets, remainingPickSeconds } from '../domain/draft.js';
 
 const STORAGE_KEY='ten-sport-v0.3';
 const clone=(v)=>structuredClone(v);
@@ -24,6 +25,51 @@ export class LocalLeagueService {
   setDraftFavorite(assetId,starred){return this.mutate('DRAFT_FAVORITE_CHANGED',{assetId,starred},s=>{s.draft.preferences??=[];let p=s.draft.preferences.find(x=>x.assetId===assetId);if(!p){p={id:crypto.randomUUID(),assetId,starred:false,queuePosition:null,updatedAt:now()};s.draft.preferences.push(p);}p.starred=starred;p.updatedAt=now();});}
   toggleDraftQueue(assetId){return this.mutate('DRAFT_QUEUE_CHANGED',{assetId},s=>{s.draft.preferences??=[];let p=s.draft.preferences.find(x=>x.assetId===assetId);if(!p){p={id:crypto.randomUUID(),assetId,starred:false,queuePosition:null,updatedAt:now()};s.draft.preferences.push(p);}if(p.queuePosition!=null){p.queuePosition=null;}else{const max=Math.max(0,...s.draft.preferences.map(x=>x.queuePosition??0));p.queuePosition=max+1;}p.updatedAt=now();});}
   moveDraftQueue(assetId,direction){return this.mutate('DRAFT_QUEUE_MOVED',{assetId,direction},s=>{s.draft.preferences??=[];const q=s.draft.preferences.filter(x=>x.queuePosition!=null).sort((a,b)=>a.queuePosition-b.queuePosition);const i=q.findIndex(x=>x.assetId===assetId);const j=i+direction;if(i<0||j<0||j>=q.length)return;const a=q[i],b=q[j],tmp=a.queuePosition;a.queuePosition=b.queuePosition;b.queuePosition=tmp;a.updatedAt=now();b.updatedAt=now();});}
-  setDraftStatus(status){return this.mutate('DRAFT_STATUS_CHANGED',{status},s=>{s.draft.status=status;});}
-  makeDraftPick(assetId){return this.mutate('DRAFT_PICK_MADE',{assetId},s=>{if(s.draft.status!==DRAFT_STATUS.LIVE)throw new Error('Draft is not live.');if(s.draft.selections.some(x=>x.assetId===assetId))throw new Error('That asset has already been drafted.');const order=draftOrder(s);const slot=order[s.draft.currentOverallPick-1];if(!slot)throw new Error('Draft is complete.');const alreadyOwned=s.rosterMemberships.some(m=>m.assetId===assetId);if(alreadyOwned)throw new Error('That asset is already rostered.');s.draft.selections.push({id:crypto.randomUUID(),overallPick:s.draft.currentOverallPick,round:slot.round,teamId:slot.currentTeamId,assetId,draftPickId:slot.draftPickId,createdAt:now()});s.draft.currentOverallPick+=1;if(s.draft.currentOverallPick>order.length)s.draft.status=DRAFT_STATUS.COMPLETE;});}
+  swapLineupAssets(teamId,activeAssetId,benchAssetId){return this.mutate('LINEUP_SWAPPED',{teamId,activeAssetId,benchAssetId},s=>{
+    const active=s.rosterMemberships.find(row=>row.teamId===teamId&&row.assetId===activeAssetId&&row.lineupStatus===LINEUP_STATUS.ACTIVE);
+    const bench=s.rosterMemberships.find(row=>row.teamId===teamId&&row.assetId===benchAssetId&&row.lineupStatus===LINEUP_STATUS.BENCH);
+    if(!active||!bench)throw new Error('Choose one active asset and one bench asset.');
+    if(s.lockedAssetIds.includes(activeAssetId)||s.lockedAssetIds.includes(benchAssetId))throw new Error('This asset is locked for its current scoring event.');
+    active.lineupStatus=LINEUP_STATUS.BENCH;bench.lineupStatus=LINEUP_STATUS.ACTIVE;
+  });}
+  setDraftTimer(seconds){return this.mutate('DRAFT_TIMER_CHANGED',{seconds},s=>{
+    if(s.currentRole!=='COMMISSIONER')throw new Error('Commissioner permission required');
+    if(!Number.isInteger(seconds)||seconds<10||seconds>600)throw new Error('Pick timer must be between 10 and 600 seconds');
+    if(s.draft.status===DRAFT_STATUS.COMPLETE)throw new Error('Draft is complete');
+    s.draft.pickTimerSeconds=seconds;
+    if(s.draft.status===DRAFT_STATUS.LIVE)s.draft.pickDeadlineAt=new Date(Date.now()+seconds*1000).toISOString();
+    if(s.draft.status===DRAFT_STATUS.PAUSED)s.draft.pausedSeconds=seconds;
+  });}
+  setDraftStatus(status){return this.mutate('DRAFT_STATUS_CHANGED',{status},s=>{
+    if(s.currentRole!=='COMMISSIONER')throw new Error('Commissioner permission required');
+    const old=s.draft.status;
+    if(status===DRAFT_STATUS.PAUSED){s.draft.pausedSeconds=remainingPickSeconds(s.draft);s.draft.pickDeadlineAt=null;}
+    if(status===DRAFT_STATUS.LIVE&&old!==DRAFT_STATUS.LIVE)s.draft.pickDeadlineAt=new Date(Date.now()+(old===DRAFT_STATUS.PAUSED?(s.draft.pausedSeconds??s.draft.pickTimerSeconds):s.draft.pickTimerSeconds)*1000).toISOString();
+    s.draft.status=status;
+  });}
+  syncDraftClock(){
+    const s=this.state;
+    if(s.draft.status!==DRAFT_STATUS.LIVE||remainingPickSeconds(s.draft)!==0)return this.getState();
+    const slot=draftOrder(s)[s.draft.currentOverallPick-1];
+    if(!slot)return this.getState();
+    const teamId=slot.currentTeamId;
+    const queued=teamId===s.currentTeamId?(s.draft.preferences??[]).filter(row=>row.queuePosition!=null).sort((a,b)=>a.queuePosition-b.queuePosition).map(row=>s.assets.find(a=>a.id===row.assetId)):[];
+    const asset=[...queued,...rankedAssets(s)].find(a=>!draftEligibility(s,teamId,a));
+    if(!asset)return this.mutate('DRAFT_AUTO_PICK_BLOCKED',{},next=>{next.draft.status=DRAFT_STATUS.PAUSED;});
+    return this.makeDraftPick(asset.id,true);
+  }
+  makeDraftPick(assetId,auto=false){return this.mutate('DRAFT_PICK_MADE',{assetId,auto},s=>{
+    if(s.draft.status!==DRAFT_STATUS.LIVE)throw new Error('Draft is not live.');
+    const order=draftOrder(s),slot=order[s.draft.currentOverallPick-1];
+    if(!slot)throw new Error('Draft is complete.');
+    if(!auto&&slot.currentTeamId!==s.currentTeamId)throw new Error('You are not on the clock');
+    if(!auto&&remainingPickSeconds(s.draft)===0)throw new Error('Pick timer has expired');
+    const reason=draftEligibility(s,slot.currentTeamId,s.assets.find(a=>a.id===assetId));
+    if(reason)throw new Error(reason);
+    s.draft.selections.push({id:crypto.randomUUID(),overallPick:s.draft.currentOverallPick,round:slot.round,teamId:slot.currentTeamId,assetId,draftPickId:slot.draftPickId,selectionType:'DRAFT',autoPicked:auto,createdAt:now()});
+    s.rosterMemberships.push({id:crypto.randomUUID(),teamId:slot.currentTeamId,assetId,lineupStatus:activeSlotCount(s,slot.currentTeamId)<ACTIVE_SLOTS?LINEUP_STATUS.ACTIVE:LINEUP_STATUS.BENCH,acquiredAt:now()});
+    s.draft.currentOverallPick+=1;
+    if(s.draft.currentOverallPick>order.length){s.draft.status=DRAFT_STATUS.COMPLETE;s.draft.pickDeadlineAt=null;}
+    else s.draft.pickDeadlineAt=new Date(Date.now()+s.draft.pickTimerSeconds*1000).toISOString();
+  });}
 }

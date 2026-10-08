@@ -325,6 +325,8 @@ export class SupabaseLeagueService {
     const trades = unwrap(tradesResult, 'Load trades') ?? [];
     const waivers = unwrap(waiversResult, 'Load waiver transactions') ?? [];
     const draft = unwrap(draftResult, 'Load draft') ?? null;
+    const clock = draft ? unwrap(await c.rpc('get_draft_clock', { p_draft_id: draft.id }), 'Load draft clock') : null;
+    const clockOffsetMs = clock?.server_now ? Date.parse(clock.server_now) - Date.now() : 0;
     const events = unwrap(eventsResult, 'Load scoring events') ?? [];
     const history = unwrap(historyResult, 'Load asset history') ?? [];
     const audit = unwrap(auditResult, 'Load audit log') ?? [];
@@ -596,6 +598,9 @@ export class SupabaseLeagueService {
             season: draft.scheduled_at ? new Date(draft.scheduled_at).getFullYear() : null,
             scheduledAt: draft.scheduled_at,
             pickTimerSeconds: draft.pick_timer_seconds,
+            pickDeadlineAt: clock?.deadline ?? draft.pick_deadline_at,
+            pausedSeconds: clock?.paused_seconds ?? draft.paused_seconds,
+            clockOffsetMs,
             status: draft.status,
             currentOverallPick: draft.current_overall_pick,
             rounds: draft.rounds,
@@ -611,6 +616,7 @@ export class SupabaseLeagueService {
               teamId: row.team_id,
               assetId: row.asset_id,
               draftPickId: row.draft_pick_id,
+              autoPicked: row.auto_picked,
               selectionType: row.selection_type ?? 'DRAFT',
               createdAt: row.selected_at,
             })),
@@ -764,6 +770,39 @@ export class SupabaseLeagueService {
     const { error } = await client().rpc('set_draft_schedule', {
       p_draft_id: state.draft.id,
       p_scheduled_at: scheduledAt,
+    });
+    if (error) throw error;
+    return this.refresh();
+  }
+
+  async setDraftTimer(seconds) {
+    const { error } = await client().rpc('set_draft_timer', { p_draft_id: this.state.draft.id, p_seconds: seconds });
+    if (error) throw error;
+    return this.refresh();
+  }
+
+  async syncDraftClock() {
+    const draft = this.state?.draft;
+    if (!draft) return;
+    const { data, error } = await client().rpc('get_draft_clock', { p_draft_id: draft.id });
+    if (error) throw error;
+    if (!data || this.state?.draft?.id !== draft.id) return;
+    if (this.state.draft.currentOverallPick !== draft.currentOverallPick || this.state.draft.status !== draft.status) return;
+    if (data.current_pick !== draft.currentOverallPick || data.status !== draft.status) return this.refresh();
+    this.state.draft = { ...draft, pickDeadlineAt: data.deadline, pausedSeconds: data.paused_seconds,
+      clockOffsetMs: Date.parse(data.server_now) - Date.now() };
+    this.emit();
+    if (data.status === 'LIVE' && data.deadline && Date.parse(data.server_now) >= Date.parse(data.deadline)) {
+      const result = await client().rpc('process_draft_timeout', { p_draft_id: draft.id, p_expected_pick: data.current_pick });
+      if (result.error) throw result.error;
+      return this.refresh();
+    }
+  }
+
+  async swapLineupAssets(teamId, activeAssetId, benchAssetId) {
+    const { error } = await client().rpc('swap_lineup_assets', {
+      p_season_id: this.state.league.seasonId, p_team_id: teamId,
+      p_active_asset_id: activeAssetId, p_bench_asset_id: benchAssetId,
     });
     if (error) throw error;
     return this.refresh();

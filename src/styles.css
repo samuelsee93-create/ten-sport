@@ -408,3 +408,14 @@ select{background:#07131d;border:1px solid #284052;color:#fff;border-radius:10px
   color:#42596a;
   border-color:#c9d7df;
 }
+.draft-ticker { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0; }
+.draft-ticker-pick { flex: 0 0 175px; display: flex; flex-direction: column; gap: 5px; text-align: left; border: 1px solid #284052; border-radius: 10px; padding: 12px; background: #081720; color: inherit; }
+.draft-ticker-pick small, .draft-ticker-pick span { font-size: 11px; opacity: .75; }
+.draft-ticker-pick.on-clock { border-color: var(--primary, #6ee7b7); }
+.draft-timer-controls input { width: 80px; margin-left: 8px; }
+.timer small { display: block; font-size: 11px; font-weight: 400; }
+.timer-urgent { color: #fbbf24; }
+.lineup-swap-prompt { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px; border: 1px solid #284052; border-radius: 10px; margin-bottom: 12px; }
+.swap-source { background: rgba(110, 231, 183, .12); }
+.lineup-position { position: sticky; left: 0; z-index: 1; background: var(--surface, #121b24); width: 90px; }
+.theme-light .draft-ticker-pick, .theme-light .lineup-position { background: #eef4f7; color: #173045; }
